@@ -13,6 +13,7 @@ export interface ScannableEntry {
   contentSample?: string;
   error?: string;
   gitBare?: boolean;
+  scanStatus?: "skipped" | "truncated";
 }
 
 export interface ScannableFsPort {

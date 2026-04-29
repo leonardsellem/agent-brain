@@ -16,7 +16,7 @@ The default posture is conservative. If Agent Brain cannot explain what owns a p
 
 ## Transaction Lifecycle
 
-Live apply follows this sequence. In the current developer preview, the public CLI proves the sequence against structured fixtures and disposable virtual targets; real app-root mutation remains deferred.
+Live apply follows this sequence. The public CLI proves the sequence against structured fixtures and disposable virtual targets, and explicit-root live flows may target disposable or user-approved roots. Real tracked personal roots should use the stricter [live personal npm E2E protocol](live-personal-npm-e2e-protocol.md) before any mutation.
 
 1. Build a dry-run plan with every create, update, move, remove, and symlink change.
 2. Compute a fingerprint for that exact dry-run.
@@ -86,6 +86,7 @@ Conflict explanation follows the same ownership vocabulary:
 - [Architecture](architecture.md)
 - [Adapter contract](adapter-contract.md)
 - [Agent handoff](agent-handoff.md)
+- [Live personal npm E2E protocol](live-personal-npm-e2e-protocol.md)
 - [Dry-run implementation](../src/apply/dry-run.ts)
 - [Snapshot implementation](../src/apply/snapshot.ts)
 - [Rollback implementation](../src/apply/rollback.ts)

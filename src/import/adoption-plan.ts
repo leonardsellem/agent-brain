@@ -111,9 +111,13 @@ function buildTargets(packages: AgentBrainPackage[]): Partial<Record<TargetAdapt
 }
 
 function inferPackageName(candidatePath: string): string {
-  const skillMatch = candidatePath.match(/\/skills\/([^/]+)\/SKILL\.md$/);
+  const skillMatch = candidatePath.match(/\/skills\/(.+)\/SKILL\.md$/);
   if (skillMatch?.[1]) {
-    return slugify(skillMatch[1]);
+    const skillPath = skillMatch[1];
+    const parts = skillPath.split("/");
+    const name = parts.at(-1) ?? "package";
+    const namespace = parts.slice(0, -1).map(slugify).filter(Boolean);
+    return slugify([...namespace, name].join("-"));
   }
 
   return slugify(candidatePath.split("/").at(-1) ?? "package");

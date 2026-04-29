@@ -6,7 +6,7 @@ Start with [AGENTS.md](../AGENTS.md) for binding repo instructions, then use thi
 
 ## Current Posture
 
-Agent Brain is a pre-1.0 TypeScript CLI. The current release surface is a fixture-backed developer preview: public commands consume `tests/fixtures/e2e-persona/scannable.json`, while live home scanning and live app-root mutation remain outside the release claim. Claude Code and Codex are materialization targets, while the Agent Brain repo owns portable package/profile intent.
+Agent Brain is a pre-1.0 TypeScript CLI. The current release surface includes a fixture-backed preview path plus explicit-root live flows for disposable or user-approved targets. Real tracked personal roots require the stricter [live personal npm E2E protocol](live-personal-npm-e2e-protocol.md), where Ring 1 stays non-mutating and Ring 2 requires fresh approval, a reviewed fingerprint, snapshot evidence, verification, rollback or approved recovery, and post-test diff inspection. Claude Code and Codex are materialization targets, while the Agent Brain repo owns portable package/profile intent.
 
 Important boundaries:
 

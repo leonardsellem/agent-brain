@@ -46,6 +46,24 @@ describe("adoption plans", () => {
     ]);
   });
 
+  it("infers package names from nested skill directories", () => {
+    const plan = createAdoptionPlan(entries([
+      {
+        path: "/home/me/.claude/skills/.system/imagegen/SKILL.md",
+        kind: "file",
+        adapter: "claude-code"
+      },
+      {
+        path: "/home/me/.claude/skills/_archived-beads/beads-agent-work/SKILL.md",
+        kind: "file",
+        adapter: "claude-code"
+      }
+    ]));
+
+    expect(plan.packages.map((pkg) => pkg.id)).toEqual(["pkg.system-imagegen", "pkg.archived-beads-beads-agent-work"]);
+    expect(plan.conflicts).toEqual([]);
+  });
+
   it("rejects excluded secret material without explicit override", () => {
     const plan = createAdoptionPlan(entries([
       {

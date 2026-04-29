@@ -48,6 +48,8 @@ If outside-repo content is useful, rewrite it as a sanitized synthetic fixture i
 
 Live target mutation is out of scope unless a later user approval names the exact target and dry-run. This rehearsal uses synthetic fixtures and disposable virtual targets only.
 
+For the stricter npm-installed journey against real tracked personal roots, use the [live personal npm E2E protocol](live-personal-npm-e2e-protocol.md). It keeps Ring 1 non-mutating and requires fresh owner approval before any Ring 2 live mutation.
+
 ## Mission Script
 
 1. Follow `README.md` as a fresh user.

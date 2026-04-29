@@ -82,4 +82,15 @@ describe("README", () => {
       expect(readme).toContain(phrase);
     }
   });
+
+  it("points cautious users to the personal live protocol after the disposable-root guidance", () => {
+    const readme = readFileSync(readmePath, "utf8");
+    const disposableGuidanceIndex = readme.indexOf("Run against a disposable or explicitly approved setup first");
+    const protocolLinkIndex = readme.indexOf("[personal live npm E2E protocol](docs/live-personal-npm-e2e-protocol.md)");
+
+    expect(disposableGuidanceIndex).toBeGreaterThan(-1);
+    expect(protocolLinkIndex).toBeGreaterThan(-1);
+    expect(protocolLinkIndex).toBeGreaterThan(disposableGuidanceIndex);
+    expect(readme).not.toContain("agent-brain apply --repo ~/.agent-brain");
+  });
 });
