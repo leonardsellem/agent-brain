@@ -1,5 +1,7 @@
 # Agent Brain
 
+[![npm version](https://img.shields.io/npm/v/@leonardsellem%2Fagent-brain?label=npm)](https://www.npmjs.com/package/@leonardsellem/agent-brain)
+
 Agent Brain is a git-backed package and profile manager for portable AI coding-agent capabilities. It helps you turn messy local agent state into a canonical model of packages, profiles, provenance, exclusions, and target materialization.
 
 The first target is the power-user migration problem: useful Claude Code and Codex setups often accumulate skills, plugins, prompts, app config, symlinks, dotfiles, caches, generated files, and local overrides faster than anyone can explain what owns what. Agent Brain makes that state legible before it mutates anything.
@@ -94,7 +96,32 @@ Prerequisites:
 - Node.js 20 or newer
 - npm
 
-Install dependencies and run the full local verification loop:
+Install the CLI from npm:
+
+```bash
+npm install -g @leonardsellem/agent-brain
+agent-brain --help
+```
+
+Run against a disposable or explicitly approved setup first. Live commands require explicit roots, dry-run fingerprint confirmation, a baseline snapshot, a materialization lock, verify, rollback, and bootstrap evidence before a target is considered healthy.
+
+Run the live release path against disposable roots:
+
+```bash
+agent-brain doctor --claude-root tmp/live-claude --codex-root tmp/live-codex --source-root tmp/live-source --json
+agent-brain import --source-root tmp/live-source --repo tmp/agent-brain-live --json
+agent-brain apply --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --profile profile.default --json
+agent-brain apply --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --profile profile.default --confirm-fingerprint sha256:from-dry-run --json
+agent-brain verify --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --json
+agent-brain rollback --snapshot tmp/agent-brain-live/.agent-brain/snapshots/snap-from-dry-run.json --target-root tmp/live-target --json
+agent-brain bootstrap --repo tmp/agent-brain-live --target-root tmp/live-target-b --adapter claude-code --profile profile.default --json
+```
+
+Use disposable roots first. The same safety gates apply to real app roots: explicit roots, dry-run fingerprint, baseline snapshot, materialization lock, verify, rollback, and bootstrap from canonical intent rather than copying full app homes.
+
+### Contributor Setup
+
+Install dependencies and run the full local verification loop from a source checkout:
 
 ```bash
 npm install
@@ -120,20 +147,6 @@ node dist/cli.js explain-conflict '~/.claude/skills/review/SKILL.md' --json
 
 `apply` reports a dry-run fingerprint unless you pass the exact `--confirm-fingerprint` value from that dry-run. `rollback` fails until snapshot metadata is supplied; that is intentional and prevents a missing rollback record from looking successful.
 
-Run the live release path against disposable roots:
-
-```bash
-node dist/cli.js doctor --claude-root tmp/live-claude --codex-root tmp/live-codex --source-root tmp/live-source --json
-node dist/cli.js import --source-root tmp/live-source --repo tmp/agent-brain-live --json
-node dist/cli.js apply --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --profile profile.default --json
-node dist/cli.js apply --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --profile profile.default --confirm-fingerprint sha256:from-dry-run --json
-node dist/cli.js verify --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --json
-node dist/cli.js rollback --snapshot tmp/agent-brain-live/.agent-brain/snapshots/snap-from-dry-run.json --target-root tmp/live-target --json
-node dist/cli.js bootstrap --repo tmp/agent-brain-live --target-root tmp/live-target-b --adapter claude-code --profile profile.default --json
-```
-
-Use disposable roots first. The same safety gates apply to real app roots: explicit roots, dry-run fingerprint, baseline snapshot, materialization lock, verify, rollback, and bootstrap from canonical intent rather than copying full app homes.
-
 ## Development
 
 This repository is optimized for agent-native development:
@@ -154,9 +167,9 @@ Useful docs:
 
 ## Repository Status
 
-Agent Brain is pre-1.0 and currently private while the model, adapters, and safety rails are hardened. The default development branch is `dev`; `main` is the integration target.
+Agent Brain is pre-1.0. The default development branch is `dev`; `main` is the integration target.
 
-The package is marked private in `package.json` while release mechanics are still being hardened.
+The npm package is configured for public launch as `@leonardsellem/agent-brain`; publication is handled through deliberate release automation rather than ordinary branch merges.
 
 ## Roadmap
 

@@ -66,6 +66,13 @@ npm run build
 node dist/cli.js --help
 ```
 
+npm distribution or release-workflow changes should also run:
+
+```bash
+npm test -- tests/unit/package-bin.test.ts tests/unit/package-metadata.test.ts tests/unit/package-pack-smoke.test.ts tests/unit/release-workflows.test.ts
+npm run pack:smoke
+```
+
 Before final handoff:
 
 - Confirm `git status --short`.
