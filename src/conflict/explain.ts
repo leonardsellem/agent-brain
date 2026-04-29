@@ -1,9 +1,11 @@
 import type { OwnershipClassification } from "../core/provenance.js";
+import type { MaterializationLock } from "../core/model.js";
 import { toDisplayPath } from "../core/display-path.js";
 
 export interface ConflictInput {
   path: string;
   generated?: boolean;
+  lock?: MaterializationLock;
   sharedRoot?: {
     adapters: string[];
     realPath: string;
@@ -31,7 +33,7 @@ export function explainConflict(input: ConflictInput): ConflictExplanation {
     };
   }
 
-  if (input.generated) {
+  if (input.generated || input.lock?.entries.some((entry) => entry.targetPath === input.path)) {
     return {
       path: displayPath,
       classification: "generated-target",

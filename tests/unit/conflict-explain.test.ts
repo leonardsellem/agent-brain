@@ -25,7 +25,18 @@ describe("conflict explanation", () => {
     expect(
       explainConflict({
         path: "/target/.codex/skills/review/SKILL.md",
-        generated: true
+        lock: {
+          schemaVersion: 1,
+          entries: [
+            {
+              adapter: "codex",
+              packageId: "pkg.review",
+              targetPath: "/target/.codex/skills/review/SKILL.md",
+              contentHash: "sha256:abc",
+              generated: true
+            }
+          ]
+        }
       })
     ).toMatchObject({
       classification: "generated-target",
