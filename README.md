@@ -67,7 +67,7 @@ All commands support text output by default and structured output with `--json` 
 | `rollback` | Restore from snapshot metadata. |
 | `explain-conflict` | Classify a conflicted path and recommend a semantic resolution. |
 
-The current implementation is fixture-first and heavily test-driven. Live home-directory mutation should remain behind adapter-backed dry-run, confirmation, snapshot, verification, and rollback flows.
+The current implementation is a fixture-backed developer preview. Public commands can consume a structured scannable fixture with `--fixture`; live home-directory scanning and live app-root mutation remain deferred until the adapter-backed safety loop is fully wired for real targets.
 
 ## Safety Model
 
@@ -99,14 +99,22 @@ npm run typecheck
 npm run build
 ```
 
-Run the compiled CLI:
+Run the compiled CLI against the synthetic release fixture:
 
 ```bash
 npm run build
 node dist/cli.js --help
-node dist/cli.js explain-conflict ~/.codex/history.jsonl
-node dist/cli.js explain-conflict ~/.claude/skills/review/SKILL.md --json
+node dist/cli.js doctor --fixture tests/fixtures/e2e-persona/scannable.json
+node dist/cli.js plan --fixture tests/fixtures/e2e-persona/scannable.json --json
+node dist/cli.js import --fixture tests/fixtures/e2e-persona/scannable.json --repo tmp/agent-brain-preview
+node dist/cli.js apply --fixture tests/fixtures/e2e-persona/scannable.json --target-root /synthetic/target --json
+node dist/cli.js verify --fixture tests/fixtures/e2e-persona/scannable.json --target-root /synthetic/target --json
+node dist/cli.js rollback --json
+node dist/cli.js explain-conflict '~/.codex/history.jsonl'
+node dist/cli.js explain-conflict '~/.claude/skills/review/SKILL.md' --json
 ```
+
+`apply` reports a dry-run fingerprint unless you pass the exact `--confirm-fingerprint` value from that dry-run. `rollback` fails until snapshot metadata is supplied; that is intentional and prevents a missing rollback record from looking successful.
 
 ## Development
 

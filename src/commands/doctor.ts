@@ -7,9 +7,20 @@ export function createDoctorCommand(): CommandHandler {
   return (context) => {
     if (!isScannableFsPort(context.fs)) {
       return {
-        ok: true,
-        summary: "No scannable fixture entries supplied",
-        findings: []
+        ok: false,
+        error: {
+          code: "fixture_required",
+          message: "doctor requires a scannable fixture in developer preview"
+        },
+        findings: [
+          {
+            id: "fixture-required",
+            severity: "medium",
+            category: "unknown",
+            message: "No scannable fixture entries were supplied",
+            recommendation: "Run agent-brain doctor --fixture tests/fixtures/e2e-persona/scannable.json"
+          }
+        ]
       };
     }
 

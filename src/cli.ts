@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { renderJsonReport } from "./reporting/json.js";
 import { renderTextReport } from "./reporting/text.js";
+import { loadScannableFixture, ScannableFixtureError } from "./core/scannable-fixture.js";
 import type { CommandContext, CommandHandler, FsPort, Report } from "./types.js";
 import { createApplyCommand } from "./commands/apply.js";
 import { createDoctorCommand } from "./commands/doctor.js";
@@ -89,8 +90,24 @@ export function createCli(options: CliOptions = {}) {
         };
       }
 
-      const context: CommandContext = { fs };
-      const report = await commands[rawCommand](context, args);
+      const fixturePath = optionValue(args, "--fixture");
+      const commandFs = fixturePath ? loadFixtureForCli(fixturePath) : { fs };
+      if ("error" in commandFs) {
+        const report: Report = {
+          ok: false,
+          error: commandFs.error,
+          findings: []
+        };
+
+        return {
+          exitCode: 1,
+          stdout: wantsJson ? renderJsonReport(report) : "",
+          stderr: wantsJson ? "" : renderTextReport(report)
+        };
+      }
+
+      const context: CommandContext = { fs: commandFs.fs };
+      const report = await commands[rawCommand](context, stripOption(args, "--fixture"));
       const stdout = wantsJson ? renderJsonReport(report) : renderTextReport(report);
 
       return {
@@ -131,7 +148,13 @@ function isCommandName(value: string): value is CommandName {
 }
 
 function validateArgs(args: string[]) {
-  const optionsRequiringValue = new Set(["--target-root", "--repo", "--snapshot"]);
+  const optionsRequiringValue = new Set([
+    "--target-root",
+    "--repo",
+    "--snapshot",
+    "--fixture",
+    "--confirm-fingerprint"
+  ]);
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
@@ -150,6 +173,43 @@ function validateArgs(args: string[]) {
   }
 
   return undefined;
+}
+
+function optionValue(args: string[], option: string): string | undefined {
+  const optionIndex = args.indexOf(option);
+  return optionIndex === -1 ? undefined : args[optionIndex + 1];
+}
+
+function stripOption(args: string[], option: string): string[] {
+  const stripped: string[] = [];
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] === option) {
+      index += 1;
+      continue;
+    }
+    stripped.push(args[index]!);
+  }
+  return stripped;
+}
+
+function loadFixtureForCli(fixturePath: string):
+  | { fs: FsPort }
+  | {
+      error: {
+        code: "invalid_fixture";
+        message: string;
+      };
+    } {
+  try {
+    return { fs: loadScannableFixture(fixturePath) };
+  } catch (error) {
+    return {
+      error: {
+        code: "invalid_fixture",
+        message: error instanceof ScannableFixtureError ? error.message : "Invalid scannable fixture"
+      }
+    };
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

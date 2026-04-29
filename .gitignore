@@ -5,3 +5,9 @@ coverage/
 .env
 .env.*
 .brv/
+/artifacts/
+/plans/
+/tmp/
+/docs/plans/
+/docs/brainstorms/
+/docs/solutions/

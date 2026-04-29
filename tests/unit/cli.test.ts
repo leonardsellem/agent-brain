@@ -69,4 +69,46 @@ describe("agent-brain CLI", () => {
     expect(result.stdout).toContain("fixture checked");
     expect(seenRoots).toEqual(["/tmp/agent-brain-fixture"]);
   });
+
+  it("loads --fixture JSON and passes it to command modules", async () => {
+    const seenRoots: string[] = [];
+    const cli = createCli({
+      commands: {
+        doctor: async (context) => {
+          seenRoots.push(context.fs.root);
+          return {
+            ok: true,
+            findings: [],
+            summary: "fixture checked"
+          };
+        }
+      }
+    });
+
+    const result = await cli.run(["doctor", "--fixture", "tests/fixtures/e2e-persona/scannable.json"]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toContain("fixture checked");
+    expect(seenRoots).toEqual(["tests/fixtures/e2e-persona"]);
+  });
+
+  it("returns structured fixture errors before command execution", async () => {
+    const cli = createCli({
+      commands: {
+        doctor: async () => {
+          throw new Error("command should not run");
+        }
+      }
+    });
+
+    const result = await cli.run(["doctor", "--json", "--fixture", "tests/fixtures/e2e-persona/missing.json"]);
+
+    expect(result.exitCode).toBe(1);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_fixture"
+      }
+    });
+  });
 });

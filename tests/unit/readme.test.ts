@@ -43,4 +43,14 @@ describe("README", () => {
       expect(readme).toContain("[MIT License](LICENSE)");
     }
   });
+
+  it("documents the compiled fixture-backed preview workflow safely", () => {
+    const readme = readFileSync(readmePath, "utf8");
+
+    expect(readme).toContain("node dist/cli.js doctor --fixture tests/fixtures/e2e-persona/scannable.json");
+    expect(readme).toContain("node dist/cli.js import --fixture tests/fixtures/e2e-persona/scannable.json --repo tmp/agent-brain-preview");
+    expect(readme).toContain("node dist/cli.js apply --fixture tests/fixtures/e2e-persona/scannable.json --target-root /synthetic/target --json");
+    expect(readme).toContain("node dist/cli.js explain-conflict '~/.codex/history.jsonl'");
+    expect(readme).not.toContain("node dist/cli.js explain-conflict ~/.codex/history.jsonl");
+  });
 });
