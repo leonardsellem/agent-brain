@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { realpathSync } from "node:fs";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { renderJsonReport } from "./reporting/json.js";
 import { renderTextReport } from "./reporting/text.js";
 import { loadScannableFixture, ScannableFixtureError } from "./core/scannable-fixture.js";
@@ -260,7 +262,19 @@ function loadFixtureForCli(fixturePath: string):
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+function isCliEntrypoint(importUrl: string, argvPath: string | undefined): boolean {
+  if (!argvPath) {
+    return false;
+  }
+
+  try {
+    return realpathSync(fileURLToPath(importUrl)) === realpathSync(argvPath);
+  } catch {
+    return importUrl === pathToFileURL(argvPath).href;
+  }
+}
+
+if (isCliEntrypoint(import.meta.url, process.argv[1])) {
   const result = await createCli().run(process.argv.slice(2));
   process.stdout.write(result.stdout);
   process.stderr.write(result.stderr);

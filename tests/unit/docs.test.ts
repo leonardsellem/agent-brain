@@ -75,6 +75,17 @@ const docs = [
     ]
   },
   {
+    path: "docs/npm-release.md",
+    headings: [
+      "## Scope",
+      "## Version Preparation",
+      "## Publish Trigger",
+      "## Trusted Publishing Setup",
+      "## Release Evidence",
+      "## Safety Boundary"
+    ]
+  },
+  {
     path: "AGENTS.md",
     headings: [
       "## Product Boundary",
