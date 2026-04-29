@@ -2,6 +2,12 @@
 import { renderJsonReport } from "./reporting/json.js";
 import { renderTextReport } from "./reporting/text.js";
 import type { CommandContext, CommandHandler, FsPort, Report } from "./types.js";
+import { createApplyCommand } from "./commands/apply.js";
+import { createDoctorCommand } from "./commands/doctor.js";
+import { createExplainConflictCommand } from "./commands/explain-conflict.js";
+import { createImportCommand, createPlanCommand } from "./commands/import.js";
+import { createRollbackCommand } from "./commands/rollback.js";
+import { createVerifyCommand } from "./commands/verify.js";
 
 export interface CliResult {
   exitCode: number;
@@ -97,15 +103,15 @@ export function createCli(options: CliOptions = {}) {
 }
 
 function defaultCommands(): Record<CommandName, CommandHandler> {
-  const commands = {} as Record<CommandName, CommandHandler>;
-  for (const name of commandNames) {
-    commands[name] = () => ({
-      ok: true,
-      summary: `${name}: ${commandPurposes[name]}`,
-      findings: []
-    });
-  }
-  return commands;
+  return {
+    doctor: createDoctorCommand(),
+    import: createImportCommand(),
+    plan: createPlanCommand(),
+    apply: createApplyCommand(),
+    verify: createVerifyCommand(),
+    rollback: createRollbackCommand(),
+    "explain-conflict": createExplainConflictCommand()
+  };
 }
 
 function renderGeneralHelp(): string {
