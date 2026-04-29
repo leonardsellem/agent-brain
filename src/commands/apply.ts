@@ -1,12 +1,16 @@
 import path from "node:path";
 import { createDryRun } from "../apply/dry-run.js";
+import { applyLiveDryRun } from "../apply/live-materializer.js";
 import { applyWithSnapshot } from "../apply/materializer.js";
+import { createSnapshot } from "../apply/snapshot.js";
+import { writeSnapshot } from "../apply/snapshot-store.js";
 import type { ApplyOperation, VirtualTarget } from "../apply/dry-run.js";
 import { isScannableFsPort } from "../core/fs-port.js";
 import { readAgentBrainRepo } from "../core/repo-reader.js";
 import { scanLiveRoot } from "../core/live-fs-port.js";
 import { createAdoptionPlan } from "../import/adoption-plan.js";
 import { planTargetMaterialization } from "../materialize/target-planner.js";
+import { writeMaterializationLock } from "../materialize/lock-store.js";
 import type { TargetAdapterName } from "../core/provenance.js";
 import type { CommandHandler } from "../types.js";
 
@@ -180,20 +184,54 @@ function createLiveDryRun(repoRoot: string, targetRoot: string, args: string[]):
   const confirmationFingerprint = optionValue(args, "--confirm-fingerprint");
 
   if (confirmationFingerprint) {
+    if (confirmationFingerprint !== dryRun.fingerprint) {
+      return {
+        ok: false,
+        error: {
+          code: "fingerprint_mismatch",
+          message: "confirmation fingerprint does not match dry-run fingerprint"
+        },
+        findings: [
+          {
+            id: "apply.fingerprint-mismatch",
+            severity: "high",
+            category: "generated-target",
+            path: targetRoot,
+            message: "Live apply was refused before mutation",
+            recommendation: "Re-run dry-run and confirm the exact reported fingerprint",
+            provenance: {
+              expected: dryRun.fingerprint,
+              received: confirmationFingerprint
+            }
+          }
+        ]
+      };
+    }
+
+    const snapshot = createSnapshot(target, dryRun, `${adapter}@1`);
+    const snapshotWrite = writeSnapshot(repoRoot, snapshot);
+    const liveApply = applyLiveDryRun(targetRoot, dryRun, confirmationFingerprint);
+    const lockWrite = writeMaterializationLock(repoRoot, planned.lock);
+
     return {
-      ok: false,
-      error: {
-        code: "live_apply_not_implemented",
-        message: "live apply mutation requires snapshot transaction support"
-      },
+      ok: true,
+      summary: `snapshot ${snapshot.id} created for ${dryRun.operations.length} operations`,
       findings: [
         {
-          id: "apply.live-confirmation-refused",
-          severity: "high",
+          id: "apply.snapshot-created",
+          severity: "info",
           category: "generated-target",
           path: targetRoot,
-          message: "Live mutation is refused until snapshot-backed apply is available",
-          recommendation: "Use the dry-run fingerprint as review evidence only for now"
+          message: "Live apply completed against the explicit target root",
+          recommendation: "Run verify with the materialization lock before considering the target healthy",
+          provenance: {
+            fingerprint: dryRun.fingerprint,
+            snapshotId: snapshot.id,
+            snapshotPath: snapshotWrite.path,
+            lockPath: lockWrite.path,
+            changedPaths: liveApply.changedPaths,
+            snapshotEntries: snapshot.entries
+          }
         }
       ]
     };
