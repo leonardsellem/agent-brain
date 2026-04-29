@@ -76,4 +76,28 @@ describe("live diagnosis", () => {
       ])
     );
   });
+
+  it("reports bounded live scans instead of recursing through cache folders", async () => {
+    const root = mkdtempSync(path.join(os.tmpdir(), "agent-brain-live-diagnosis-"));
+    const codexRoot = path.join(root, ".codex");
+    mkdirSync(path.join(codexRoot, "plugins/cache/large-plugin"), { recursive: true });
+    writeFileSync(path.join(codexRoot, "plugins/cache/large-plugin/SKILL.md"), "# Cached\n");
+    writeFileSync(path.join(codexRoot, "config.toml"), "model = \"gpt\"\n");
+
+    const cli = createCli();
+    const result = await cli.run(["doctor", "--codex-root", codexRoot, "--json"]);
+    const report = JSON.parse(result.stdout);
+
+    expect(result.exitCode).toBe(0);
+    expect(report.findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "scan.skipped-directory",
+          severity: "medium",
+          path: path.join(codexRoot, "plugins/cache")
+        })
+      ])
+    );
+    expect(result.stdout).not.toContain("large-plugin/SKILL.md");
+  });
 });

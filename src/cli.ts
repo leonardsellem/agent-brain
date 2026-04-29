@@ -48,6 +48,59 @@ const commandPurposes: Record<CommandName, string> = {
 
 const commandNames = Object.keys(commandPurposes) as CommandName[];
 
+const commandHelpOptions: Record<CommandName, string[]> = {
+  doctor: [
+    "--fixture <path>             Read a synthetic scannable fixture.",
+    "--claude-root <path>         Diagnose an explicit Claude Code root.",
+    "--codex-root <path>          Diagnose an explicit Codex root.",
+    "--source-root <path>         Diagnose an additional import source root; repeatable.",
+    "--json                      Render structured JSON output."
+  ],
+  import: [
+    "--fixture <path>             Read a synthetic scannable fixture.",
+    "--source-root <path>         Import portable candidates from an explicit live source root; repeatable.",
+    "--repo <path>                Write the Agent Brain repo output to this destination.",
+    "--json                      Render structured JSON output."
+  ],
+  plan: [
+    "--fixture <path>             Read a synthetic scannable fixture.",
+    "--source-root <path>         Preview adoption from an explicit live source root; repeatable.",
+    "--json                      Render structured JSON output."
+  ],
+  apply: [
+    "--fixture <path>             Build a fixture-backed dry-run.",
+    "--repo <path>                Read an Agent Brain repo for live materialization.",
+    "--target-root <path>         Target root to dry-run or apply into.",
+    "--adapter <claude-code|codex> Adapter used for live target planning.",
+    "--profile <id>               Profile to materialize; defaults to profile.default.",
+    "--confirm-fingerprint <sha>  Confirm the exact reviewed dry-run fingerprint before mutation.",
+    "--json                      Render structured JSON output."
+  ],
+  bootstrap: [
+    "--repo <path>                Read an Agent Brain repo.",
+    "--target-root <path>         New target root to materialize into.",
+    "--adapter <claude-code|codex> Adapter used for target planning.",
+    "--profile <id>               Profile to materialize; defaults to profile.default.",
+    "--json                      Render structured JSON output."
+  ],
+  verify: [
+    "--fixture <path>             Verify a fixture-backed target.",
+    "--repo <path>                Read materialization lock metadata from an Agent Brain repo.",
+    "--target-root <path>         Target root to verify.",
+    "--adapter <claude-code|codex> Adapter used for live target scanning.",
+    "--json                      Render structured JSON output."
+  ],
+  rollback: [
+    "--snapshot <path>            Snapshot metadata to restore.",
+    "--target-root <path>         Target root to restore into.",
+    "--json                      Render structured JSON output."
+  ],
+  "explain-conflict": [
+    "<path>                      Path to classify with Agent Brain ownership terms.",
+    "--json                      Render structured JSON output."
+  ]
+};
+
 export function createCli(options: CliOptions = {}) {
   const fs = options.fs ?? { root: "/" };
   const commands = { ...defaultCommands(), ...options.commands };
@@ -149,7 +202,14 @@ function renderGeneralHelp(): string {
 }
 
 function renderCommandHelp(command: CommandName): string {
-  return `agent-brain ${command}\n\n${commandPurposes[command]}\n`;
+  return [
+    `agent-brain ${command}`,
+    "",
+    commandPurposes[command],
+    "",
+    "Options:",
+    ...commandHelpOptions[command].map((option) => `  ${option}`)
+  ].join("\n") + "\n";
 }
 
 function isCommandName(value: string): value is CommandName {

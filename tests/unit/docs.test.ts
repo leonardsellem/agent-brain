@@ -227,10 +227,12 @@ describe("companion documentation", () => {
   it("keeps the personal live findings report sanitized", () => {
     const findings = readFileSync(path.join(repoRoot, "docs/live-personal-npm-e2e-findings.md"), "utf8");
 
-    expect(findings).toContain("no-go");
-    expect(findings).toContain("release blocker");
+    expect(findings).toContain("go for the bounded personal-live canary release claim");
+    expect(findings).toContain("Ring 1 result: passed");
+    expect(findings).toContain("Ring 2 result: passed");
+    expect(findings).toContain("Rollback status: proven");
     expect(findings).toContain("Node heap out of memory");
-    expect(findings).toContain("Computer Use terminal access unavailable");
+    expect(findings).toContain("terminal app access was unavailable");
     expect(findings).not.toContain("artifacts/live-personal-npm-e2e/20260429-225639-ring1");
   });
 });
