@@ -130,7 +130,7 @@ Useful docs:
 
 Agent Brain is pre-1.0 and currently private while the model, adapters, and safety rails are hardened. The default development branch is `dev`; `main` is the integration target.
 
-The package is marked private in `package.json` until release and licensing decisions are explicit.
+The package is marked private in `package.json` while release mechanics are still being hardened.
 
 ## Roadmap
 
@@ -162,4 +162,4 @@ If you discover a security issue while this repository is private, report it thr
 
 ## License
 
-No open-source license has been selected yet. Until a license file is added, the code remains private and all rights are reserved.
+Agent Brain is available under the [MIT License](LICENSE).

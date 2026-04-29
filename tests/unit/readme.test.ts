@@ -35,4 +35,12 @@ describe("README", () => {
       expect(existsSync(path.join(repoRoot, href))).toBe(true);
     }
   });
+
+  it("matches the repository license file", () => {
+    const readme = readFileSync(readmePath, "utf8");
+
+    if (existsSync(path.join(repoRoot, "LICENSE"))) {
+      expect(readme).toContain("[MIT License](LICENSE)");
+    }
+  });
 });
