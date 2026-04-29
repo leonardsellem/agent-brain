@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const repoRoot = path.resolve(import.meta.dirname, "../..");
 const packagePath = path.join(repoRoot, "package.json");
+const packageLockPath = path.join(repoRoot, "package-lock.json");
 
 type PackageJson = {
   name?: string;
@@ -21,6 +22,9 @@ type PackageJson = {
 };
 
 const readPackageJson = (): PackageJson => JSON.parse(readFileSync(packagePath, "utf8")) as PackageJson;
+
+const readPackageLock = (): { packages?: Record<string, { version?: string }> } =>
+  JSON.parse(readFileSync(packageLockPath, "utf8")) as { packages?: Record<string, { version?: string }> };
 
 describe("npm package metadata", () => {
   it("uses the scoped launch package identity while preserving the CLI command", () => {
@@ -65,5 +69,12 @@ describe("npm package metadata", () => {
     expect(packageJson.files).not.toEqual(
       expect.arrayContaining(["tests/", "docs/plans/", "docs/brainstorms/", ".brv/", "artifacts/", "tmp/"])
     );
+  });
+
+  it("keeps optional transitive package metadata complete for cross-platform npm ci", () => {
+    const packageLock = readPackageLock();
+
+    expect(packageLock.packages?.["node_modules/@emnapi/core"]?.version).toBe("1.10.0");
+    expect(packageLock.packages?.["node_modules/@emnapi/runtime"]?.version).toBe("1.10.0");
   });
 });
