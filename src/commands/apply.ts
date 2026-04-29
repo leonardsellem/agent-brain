@@ -1,9 +1,13 @@
 import path from "node:path";
 import { createDryRun } from "../apply/dry-run.js";
 import { applyWithSnapshot } from "../apply/materializer.js";
-import type { ApplyOperation } from "../apply/dry-run.js";
+import type { ApplyOperation, VirtualTarget } from "../apply/dry-run.js";
 import { isScannableFsPort } from "../core/fs-port.js";
+import { readAgentBrainRepo } from "../core/repo-reader.js";
+import { scanLiveRoot } from "../core/live-fs-port.js";
 import { createAdoptionPlan } from "../import/adoption-plan.js";
+import { planTargetMaterialization } from "../materialize/target-planner.js";
+import type { TargetAdapterName } from "../core/provenance.js";
 import type { CommandHandler } from "../types.js";
 
 export function createApplyCommand(): CommandHandler {
@@ -18,6 +22,11 @@ export function createApplyCommand(): CommandHandler {
         },
         findings: []
       };
+    }
+
+    const repoRoot = optionValue(args, "--repo");
+    if (repoRoot) {
+      return createLiveDryRun(repoRoot, targetRoot, args);
     }
 
     if (!isScannableFsPort(context.fs)) {
@@ -126,6 +135,97 @@ export function createApplyCommand(): CommandHandler {
   };
 }
 
+function createLiveDryRun(repoRoot: string, targetRoot: string, args: string[]): ReturnType<CommandHandler> {
+  const adapter = optionValue(args, "--adapter");
+  if (!isTargetAdapter(adapter)) {
+    return {
+      ok: false,
+      error: {
+        code: "adapter_required",
+        message: "live apply dry-run requires --adapter <claude-code|codex>"
+      },
+      findings: []
+    };
+  }
+
+  const profileId = optionValue(args, "--profile") ?? "profile.default";
+  const loaded = readAgentBrainRepo(repoRoot);
+  if (!loaded.ok || !loaded.repo) {
+    return {
+      ok: false,
+      error: {
+        code: "repo_invalid",
+        message: "Agent Brain repo could not be loaded"
+      },
+      findings: loaded.errors.map((error) => ({
+        id: "repo-invalid",
+        severity: "high",
+        category: "unknown",
+        path: repoRoot,
+        message: error
+      }))
+    };
+  }
+
+  const target = virtualTargetFromRoot(targetRoot, adapter);
+  const planned = planTargetMaterialization({
+    repo: loaded.repo,
+    packageFiles: loaded.packageFiles,
+    adapter,
+    profileId,
+    targetRoot,
+    target
+  });
+  const dryRun = createDryRun(target, planned.operations);
+  const confirmationFingerprint = optionValue(args, "--confirm-fingerprint");
+
+  if (confirmationFingerprint) {
+    return {
+      ok: false,
+      error: {
+        code: "live_apply_not_implemented",
+        message: "live apply mutation requires snapshot transaction support"
+      },
+      findings: [
+        {
+          id: "apply.live-confirmation-refused",
+          severity: "high",
+          category: "generated-target",
+          path: targetRoot,
+          message: "Live mutation is refused until snapshot-backed apply is available",
+          recommendation: "Use the dry-run fingerprint as review evidence only for now"
+        }
+      ]
+    };
+  }
+
+  return {
+    ok: true,
+    summary: `dry-run ${dryRun.operations.length} operations; fingerprint ${dryRun.fingerprint}`,
+    findings: [
+      ...planned.findings,
+      {
+        id: "apply.dry-run",
+        severity: dryRun.operations.length === 0 ? "low" : "info",
+        category: "generated-target",
+        path: targetRoot,
+        message:
+          dryRun.operations.length === 0
+            ? "Dry-run produced no operations and did not mutate the target"
+            : "Dry-run evidence produced without mutating the target",
+        recommendation: "Review operations and fingerprint before confirming live apply",
+        provenance: {
+          adapter,
+          profileId,
+          fingerprint: dryRun.fingerprint,
+          operations: dryRun.operations,
+          lock: planned.lock
+        }
+      }
+    ]
+  };
+}
+
 function operationsForTarget(
   adoptionPlan: ReturnType<typeof createAdoptionPlan>,
   targetRoot: string
@@ -147,4 +247,29 @@ function changedPaths(operations: ApplyOperation[]): string[] {
 function optionValue(args: string[], option: string): string | undefined {
   const optionIndex = args.indexOf(option);
   return optionIndex === -1 ? undefined : args[optionIndex + 1];
+}
+
+function isTargetAdapter(value: string | undefined): value is TargetAdapterName {
+  return value === "claude-code" || value === "codex";
+}
+
+function virtualTargetFromRoot(targetRoot: string, adapter: TargetAdapterName): VirtualTarget {
+  const scanned = scanLiveRoot({
+    root: targetRoot,
+    adapter,
+    contentSampleBytes: Number.MAX_SAFE_INTEGER
+  });
+
+  return {
+    files: Object.fromEntries(
+      scanned.entries
+        .filter((entry) => entry.kind === "file")
+        .map((entry) => [entry.path, entry.contentSample ?? ""])
+    ),
+    symlinks: Object.fromEntries(
+      scanned.entries
+        .filter((entry) => entry.kind === "symlink" && entry.linkTarget)
+        .map((entry) => [entry.path, entry.linkTarget!])
+    )
+  };
 }

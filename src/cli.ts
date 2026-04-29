@@ -159,7 +159,9 @@ function validateArgs(args: string[]) {
     "--confirm-fingerprint",
     "--claude-root",
     "--codex-root",
-    "--source-root"
+    "--source-root",
+    "--adapter",
+    "--profile"
   ]);
 
   for (let index = 0; index < args.length; index += 1) {
