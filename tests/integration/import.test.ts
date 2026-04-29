@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -72,22 +72,57 @@ describe("import and plan commands", () => {
     const imported = await cli.run(["import", "--json", "--repo", repo]);
 
     expect(imported.exitCode).toBe(0);
-    expect(JSON.parse(imported.stdout).findings).toEqual([
-      expect.objectContaining({
-        id: "brain-file-written",
-        path: path.join(repo, "agent-brain.json")
-      }),
-      expect.objectContaining({
-        id: "brain-file-written",
-        path: path.join(repo, "packages/review/package.json")
-      }),
-      expect.objectContaining({
-        id: "brain-file-written",
-        path: path.join(repo, "profiles/default.json")
-      })
-    ]);
+    expect(JSON.parse(imported.stdout).findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "brain-file-written",
+          path: path.join(repo, "agent-brain.json")
+        }),
+        expect.objectContaining({
+          id: "brain-file-written",
+          path: path.join(repo, "packages/review/SKILL.md")
+        }),
+        expect.objectContaining({
+          id: "brain-file-written",
+          path: path.join(repo, "packages/review/package.json")
+        }),
+        expect.objectContaining({
+          id: "brain-file-written",
+          path: path.join(repo, "profiles/default.json")
+        })
+      ])
+    );
     expect(existsSync(path.join(repo, "agent-brain.json"))).toBe(true);
     expect(readFileSync(path.join(repo, "packages/review/package.json"), "utf8")).toContain("\"pkg.review\"");
+    expect(readFileSync(path.join(repo, "packages/review/SKILL.md"), "utf8")).toBe("");
+  });
+
+  it("imports portable source content from an explicit live source root", async () => {
+    const sourceRoot = mkdtempSync(path.join(os.tmpdir(), "agent-brain-source-"));
+    const repo = mkdtempSync(path.join(os.tmpdir(), "agent-brain-repo-"));
+    const skillPath = path.join(sourceRoot, ".dotstate/storage/Personal/.claude/skills/review/SKILL.md");
+    mkdirSync(path.dirname(skillPath), { recursive: true });
+    writeFileSync(skillPath, "# Live Review\n\nUse the live source.\n");
+    const authPath = path.join(sourceRoot, ".dotstate/storage/Personal/.codex/auth.json");
+    mkdirSync(path.dirname(authPath), { recursive: true });
+    writeFileSync(authPath, "token = \"sk-secret-value\"\n");
+    const cli = createCli();
+
+    const imported = await cli.run(["import", "--source-root", sourceRoot, "--repo", repo, "--json"]);
+
+    expect(imported.exitCode).toBe(0);
+    expect(readFileSync(path.join(repo, "packages/review/SKILL.md"), "utf8")).toBe(
+      "# Live Review\n\nUse the live source.\n"
+    );
+    expect(existsSync(path.join(repo, "packages/auth/package.json"))).toBe(false);
+    expect(JSON.parse(imported.stdout).findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "brain-file-written",
+          path: path.join(repo, "packages/review/SKILL.md")
+        })
+      ])
+    );
   });
 });
 

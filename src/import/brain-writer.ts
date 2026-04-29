@@ -26,6 +26,9 @@ export function writeBrainRepo(
   for (const pkg of plan.packages) {
     const packageSlug = pkg.files[0]?.split("/")[1] ?? pkg.id.replace(/^pkg\./, "");
     nextFiles[`packages/${packageSlug}/package.json`] = stableJson(pkg);
+    for (const filePath of pkg.files) {
+      nextFiles[filePath] = plan.packageSources[filePath] ?? "";
+    }
   }
 
   const writtenPaths = Object.keys(nextFiles)

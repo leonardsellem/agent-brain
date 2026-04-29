@@ -13,6 +13,7 @@ describe("brain writer", () => {
 
     expect(Object.keys(result.files).sort()).toEqual([
       "agent-brain.json",
+      "packages/review/SKILL.md",
       "packages/review/package.json",
       "profiles/default.json"
     ]);

@@ -2,6 +2,7 @@ import { classifyEntry } from "../core/classification.js";
 import type { AgentBrainExclusion, AgentBrainPackage, AgentBrainProfile } from "../core/model.js";
 import type { ScannableEntry } from "../core/fs-port.js";
 import type { TargetAdapterName } from "../core/provenance.js";
+import { readPortableSourceContent } from "./source-reader.js";
 
 export interface AdoptionConflict {
   id: "package-name-conflict";
@@ -20,6 +21,7 @@ export interface AdoptionPlan {
   exclusions: AgentBrainExclusion[];
   conflicts: AdoptionConflict[];
   rejections: AdoptionRejection[];
+  packageSources: Record<string, string>;
 }
 
 export function createAdoptionPlan(entries: ScannableEntry[]): AdoptionPlan {
@@ -27,6 +29,7 @@ export function createAdoptionPlan(entries: ScannableEntry[]): AdoptionPlan {
   const packagePaths = new Map<string, string[]>();
   const exclusions: AgentBrainExclusion[] = [];
   const rejections: AdoptionRejection[] = [];
+  const packageSources: Record<string, string> = {};
 
   for (const entry of entries) {
     const classified = classifyEntry(entry);
@@ -50,6 +53,7 @@ export function createAdoptionPlan(entries: ScannableEntry[]): AdoptionPlan {
 
       if (!packages.has(id)) {
         packages.set(id, pkg);
+        packageSources[pkg.files[0]!] = readPortableSourceContent(entry);
       }
       packagePaths.set(id, [...(packagePaths.get(id) ?? []), entry.path]);
       continue;
@@ -90,7 +94,8 @@ export function createAdoptionPlan(entries: ScannableEntry[]): AdoptionPlan {
     },
     exclusions,
     conflicts,
-    rejections
+    rejections,
+    packageSources
   };
 }
 
