@@ -1,4 +1,5 @@
 import type { Finding } from "../types.js";
+import type { AgentBrainPackage } from "../core/model.js";
 import type { OwnershipClassification, TargetAdapterName } from "../core/provenance.js";
 
 export const adapterVocabulary = [
@@ -23,10 +24,33 @@ export interface TargetVerificationInput {
   readable: boolean;
 }
 
+export interface AdapterCapabilities {
+  version: 1;
+  packageKinds: AgentBrainPackage["kind"][];
+}
+
+export interface MaterializePackageInput {
+  pkg: AgentBrainPackage;
+  content: string;
+}
+
+export type AdapterMaterialization =
+  | {
+      ok: true;
+      path: string;
+      content: string;
+    }
+  | {
+      ok: false;
+      finding: Finding;
+    };
+
 export interface TargetAdapter {
   name: TargetAdapterName;
   vocabulary: typeof adapterVocabulary;
+  capabilities: AdapterCapabilities;
   classifyPath(path: string): PathClassification;
+  materializePackage(input: MaterializePackageInput): AdapterMaterialization;
   verifyTarget(input: TargetVerificationInput): Finding[];
 }
 

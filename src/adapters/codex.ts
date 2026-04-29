@@ -4,6 +4,10 @@ import type { TargetAdapter } from "./index.js";
 export const codexAdapter: TargetAdapter = {
   name: "codex",
   vocabulary: adapterVocabulary,
+  capabilities: {
+    version: 1,
+    packageKinds: ["skill"]
+  },
 
   classifyPath(candidatePath) {
     return classifyByRules(candidatePath, [
@@ -19,6 +23,18 @@ export const codexAdapter: TargetAdapter = {
       [/^~\/\.codex\/auth\.json$/, role("secret", "auth", 0.98)],
       [/^~\/\.codex\/memory\//, role("machine-local", "memory", 0.7)]
     ]);
+  },
+
+  materializePackage(input) {
+    if (input.pkg.kind !== "skill") {
+      return unsupportedPackage(input.pkg);
+    }
+
+    return {
+      ok: true,
+      path: `skills/${packageSlug(input.pkg)}/SKILL.md`,
+      content: input.content
+    };
   },
 
   verifyTarget(input) {
@@ -37,6 +53,24 @@ export const codexAdapter: TargetAdapter = {
     ];
   }
 };
+
+function unsupportedPackage(pkg: Parameters<TargetAdapter["materializePackage"]>[0]["pkg"]) {
+  return {
+    ok: false as const,
+    finding: {
+      id: "unsupported-package-kind",
+      severity: "medium" as const,
+      category: "unknown",
+      path: pkg.id,
+      message: `Codex adapter cannot materialize ${pkg.kind} packages yet`,
+      recommendation: "Leave this package as a review item until the adapter supports the package kind"
+    }
+  };
+}
+
+function packageSlug(pkg: Parameters<TargetAdapter["materializePackage"]>[0]["pkg"]): string {
+  return pkg.files[0]?.split("/")[1] ?? pkg.id.replace(/^pkg\./, "");
+}
 
 function role(
   classification: ReturnType<TargetAdapter["classifyPath"]>["classification"],
