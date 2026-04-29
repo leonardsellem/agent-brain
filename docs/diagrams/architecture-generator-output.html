@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>agent-brain - Architecture Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --accent-color: #2563eb;
+            --accent-soft: #dbeafe;
+            --border-color: #e2e8f0;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        header {
+            background: var(--card-bg);
+            padding: 0.75rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+        .title-area {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        h1 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+        .project-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .context-badge {
+            background: var(--accent-color);
+            color: white;
+            padding: 0.2rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: none;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .controls {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+        .group {
+            display: flex;
+            background: #f8fafc;
+            padding: 0.2rem;
+            border-radius: 8px;
+            gap: 0.2rem;
+            border: 1px solid var(--border-color);
+        }
+        button {
+            background: transparent;
+            border: none;
+            padding: 0.4rem 0.9rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.15s ease;
+        }
+        button.active {
+            background: white;
+            color: var(--accent-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        button:hover:not(.active) {
+            color: var(--text-primary);
+            background: #f1f5f9;
+        }
+        .action-btn {
+            background: white;
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .action-btn:hover {
+            background: #f8fafc;
+        }
+        #diagram-container {
+            flex: 1;
+            overflow: auto;
+            padding: 3rem;
+            background: white;
+            background-image: 
+                linear-gradient(var(--bg-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--bg-color) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-width: min-content;
+        }
+        .mermaid svg {
+            max-width: none !important;
+            height: auto !important;
+            cursor: crosshair;
+            transition: transform 0.1s ease-out;
+        }
+        .back-btn {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            gap: 0.3rem;
+            background: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .back-btn:hover {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="title-area">
+            <div onclick="resetView()" style="cursor:pointer">
+                <span class="project-label">Project</span>
+                <h1>agent-brain</h1>
+            </div>
+            <div id="context-badge" class="context-badge"></div>
+            <div id="back-btn" class="back-btn" onclick="resetView()">
+                <span>←</span> Exit Domain
+            </div>
+        </div>
+        <div class="controls">
+            <div class="group" id="view-group">
+                <button onclick="changeView('high-level')" id="btn-high-level" class="active">High-Level</button>
+                <button onclick="changeView('detailed')" id="btn-detailed">Detailed</button>
+            </div>
+            <div class="group" id="direction-group">
+                <button onclick="setDirection('TD')" id="btn-TD">Vertical</button>
+                <button onclick="setDirection('LR')" id="btn-LR" class="active">Horizontal</button>
+            </div>
+            <button class="action-btn" onclick="zoom(0.15)">Zoom +</button>
+            <button class="action-btn" onclick="zoom(-0.15)">Zoom -</button>
+            <button class="action-btn" onclick="resetZoom()">Reset</button>
+        </div>
+    </header>
+    <div id="diagram-container">
+        <div class="mermaid" id="mermaid-graph"></div>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        
+        const graph = {"nodes":[{"id":"input","metadata":{"type":"external","source":"inferred","label":"input","layer":"External","domain":"shared"},"type":"external","label":"input","externalCalls":[]},{"id":"node:crypto","metadata":{"type":"external","source":"inferred","label":"node:crypto","layer":"External","domain":"shared"},"type":"external","label":"node:crypto","externalCalls":[]},{"id":"node:fs","metadata":{"type":"external","source":"inferred","label":"node:fs","layer":"External","domain":"shared"},"type":"external","label":"node:fs","externalCalls":[]},{"id":"node:path","metadata":{"type":"external","source":"inferred","label":"node:path","layer":"External","domain":"shared"},"type":"external","label":"node:path","externalCalls":[]},{"id":"node:url","metadata":{"type":"external","source":"inferred","label":"node:url","layer":"External","domain":"shared"},"type":"external","label":"node:url","externalCalls":[]},{"id":"readAgentBrainRepo","metadata":{"type":"external","source":"inferred","label":"readAgentBrainRepo","layer":"External","domain":"shared"},"type":"external","label":"readAgentBrainRepo","externalCalls":[]},{"id":"readRepoManifest","metadata":{"type":"external","source":"inferred","label":"readRepoManifest","layer":"External","domain":"shared"},"type":"external","label":"readRepoManifest","externalCalls":[]},{"id":"renderJsonReport","metadata":{"type":"external","source":"inferred","label":"renderJsonReport","layer":"External","domain":"shared"},"type":"external","label":"renderJsonReport","externalCalls":[]},{"id":"renderTextReport","metadata":{"type":"external","source":"inferred","label":"renderTextReport","layer":"External","domain":"shared"},"type":"external","label":"renderTextReport","externalCalls":[]},{"id":"repo","metadata":{"type":"external","source":"inferred","label":"repo","layer":"External","domain":"shared"},"type":"external","label":"repo","externalCalls":[]},{"id":"repoFromPlan","metadata":{"type":"external","source":"inferred","label":"repoFromPlan","layer":"External","domain":"shared"},"type":"external","label":"repoFromPlan","externalCalls":[]},{"id":"repoWrite","metadata":{"type":"external","source":"inferred","label":"repoWrite","layer":"External","domain":"shared"},"type":"external","label":"repoWrite","externalCalls":[]},{"id":"src/adapters/claude-code.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":75,"complexity":3},"label":"Claude Code","layer":"Core","domain":"adapters"},"type":"module","externalCalls":[]},{"id":"src/adapters/codex.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":76,"complexity":3},"label":"Codex","layer":"Core","domain":"adapters"},"type":"module","externalCalls":[]},{"id":"src/adapters/index.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":89,"complexity":5},"label":"Adapters/Index","layer":"Core","domain":"adapters"},"type":"module","externalCalls":[]},{"id":"src/apply/dry-run.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":23,"complexity":1},"label":"Dry Run","layer":"Core","domain":"apply"},"type":"module","externalCalls":[]},{"id":"src/apply/live-materializer.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":65,"complexity":9},"label":"Live Materializer","layer":"Core","domain":"apply"},"type":"module","externalCalls":[]},{"id":"src/apply/materializer.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":43,"complexity":8},"label":"Materializer","layer":"Core","domain":"apply"},"type":"module","externalCalls":[]},{"id":"src/apply/rollback.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":34,"complexity":5},"label":"Rollback","layer":"Core","domain":"apply"},"type":"module","externalCalls":[]},{"id":"src/apply/snapshot-store.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":19,"complexity":1},"label":"Snapshot Store","layer":"Core","domain":"apply"},"type":"module","externalCalls":[{"type":"database","target":"writeRepoFiles","location":{"line":12,"column":19}}]},{"id":"src/apply/snapshot.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":50,"complexity":5},"label":"Snapshot","layer":"Core","domain":"apply"},"type":"module","externalCalls":[]},{"id":"src/apply/verifier.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":88,"complexity":8},"label":"Verifier","layer":"Core","domain":"apply"},"type":"module","externalCalls":[{"type":"database","target":"repo","location":{"line":62,"column":19}}]},{"id":"src/cli.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":247,"complexity":32},"label":"Cli","layer":"Core","domain":"shared"},"type":"module","externalCalls":[{"type":"database","target":"renderJsonReport","location":{"line":94,"column":31}},{"type":"database","target":"renderTextReport","location":{"line":95,"column":36}},{"type":"database","target":"renderJsonReport","location":{"line":112,"column":31}},{"type":"database","target":"renderTextReport","location":{"line":113,"column":36}},{"type":"database","target":"renderJsonReport","location":{"line":119,"column":34}},{"type":"database","target":"renderTextReport","location":{"line":119,"column":61}}]},{"id":"src/commands/apply.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":293,"complexity":20},"label":"Apply","layer":"Core","domain":"commands"},"type":"module","externalCalls":[{"type":"database","target":"readAgentBrainRepo","location":{"line":156,"column":18}}]},{"id":"src/commands/bootstrap.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":6,"complexity":1},"label":"Bootstrap","layer":"Core","domain":"commands"},"type":"module","externalCalls":[]},{"id":"src/commands/doctor.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":81,"complexity":6},"label":"Doctor","layer":"Core","domain":"commands"},"type":"module","externalCalls":[]},{"id":"src/commands/explain-conflict.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":35,"complexity":3},"label":"Explain Conflict","layer":"Core","domain":"commands"},"type":"module","externalCalls":[]},{"id":"src/commands/import.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":122,"complexity":8},"label":"Import","layer":"Core","domain":"commands"},"type":"module","externalCalls":[{"type":"database","target":"writeBrainRepo","location":{"line":78,"column":19}},{"type":"database","target":"writeRepoFiles","location":{"line":79,"column":23}},{"type":"database","target":"repoWrite","location":{"line":83,"column":17}}]},{"id":"src/commands/rollback.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":57,"complexity":4},"label":"Rollback","layer":"Core","domain":"commands"},"type":"module","externalCalls":[]},{"id":"src/commands/verify.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":204,"complexity":16},"label":"Verify","layer":"Core","domain":"commands"},"type":"module","externalCalls":[{"type":"database","target":"repoFromPlan","location":{"line":43,"column":20}}]},{"id":"src/conflict/explain.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":62,"complexity":8},"label":"Explain","layer":"Core","domain":"conflict"},"type":"module","externalCalls":[]},{"id":"src/core/classification.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":107,"complexity":13},"label":"Classification","layer":"Core","domain":"core"},"type":"module","externalCalls":[]},{"id":"src/core/display-path.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":13,"complexity":4},"label":"Display Path","layer":"Core","domain":"core"},"type":"module","externalCalls":[]},{"id":"src/core/fs-port.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":21,"complexity":1},"label":"Fs Port","layer":"Core","domain":"core"},"type":"module","externalCalls":[]},{"id":"src/core/git-port.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":5,"complexity":1},"label":"Git Port","layer":"Core","domain":"core"},"type":"module","externalCalls":[]},{"id":"src/core/live-fs-port.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":132,"complexity":8},"label":"Live Fs Port","layer":"Core","domain":"core"},"type":"module","externalCalls":[]},{"id":"src/core/model.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":128,"complexity":13},"label":"Model","layer":"Core","domain":"core"},"type":"module","externalCalls":[{"type":"database","target":"repo","location":{"line":79,"column":3}},{"type":"database","target":"repo","location":{"line":110,"column":3}}]},{"id":"src/core/path-safety.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":20,"complexity":7},"label":"Path Safety","layer":"Core","domain":"core"},"type":"module","externalCalls":[]},{"id":"src/core/provenance.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":37,"complexity":7},"label":"Provenance","layer":"Core","domain":"core"},"type":"module","externalCalls":[]},{"id":"src/core/repo-reader.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":55,"complexity":5},"label":"Repo Reader","layer":"Core","domain":"core"},"type":"module","externalCalls":[{"type":"database","target":"readRepoManifest","location":{"line":19,"column":16}},{"type":"database","target":"validateAgentBrainRepo","location":{"line":24,"column":18}},{"type":"database","target":"repo","location":{"line":26,"column":3}}]},{"id":"src/core/repo-writer.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":27,"complexity":2},"label":"Repo Writer","layer":"Core","domain":"core"},"type":"module","externalCalls":[]},{"id":"src/core/scannable-fixture.ts","metadata":{"type":"module","source":"inferred","inheritance":[{"name":"Error","type":"extends"}],"decorators":[],"metrics":{"sloc":99,"complexity":25},"label":"Scannable Fixture","layer":"Core","domain":"core"},"type":"module","externalCalls":[]},{"id":"src/core/sync-status.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":19,"complexity":2},"label":"Sync Status","layer":"Core","domain":"core"},"type":"module","externalCalls":[{"type":"database","target":"repo","location":{"line":11,"column":30}}]},{"id":"src/import/adoption-plan.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":116,"complexity":8},"label":"Adoption Plan","layer":"Core","domain":"import"},"type":"module","externalCalls":[]},{"id":"src/import/brain-writer.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":50,"complexity":5},"label":"Brain Writer","layer":"Core","domain":"import"},"type":"module","externalCalls":[]},{"id":"src/import/live-scanner.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":35,"complexity":6},"label":"Live Scanner","layer":"Core","domain":"import"},"type":"module","externalCalls":[]},{"id":"src/import/source-detectors.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":60,"complexity":13},"label":"Source Detectors","layer":"Core","domain":"import"},"type":"module","externalCalls":[]},{"id":"src/import/source-reader.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":16,"complexity":3},"label":"Source Reader","layer":"Core","domain":"import"},"type":"module","externalCalls":[]},{"id":"src/materialize/lock-store.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":96,"complexity":6},"label":"Lock Store","layer":"Core","domain":"materialize"},"type":"module","externalCalls":[{"type":"database","target":"writeRepoFiles","location":{"line":33,"column":19}}]},{"id":"src/materialize/target-planner.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":93,"complexity":6},"label":"Target Planner","layer":"Core","domain":"materialize"},"type":"module","externalCalls":[{"type":"database","target":"input","location":{"line":31,"column":19}},{"type":"database","target":"input","location":{"line":45,"column":20}}]},{"id":"src/reporting/json.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":4,"complexity":1},"label":"Json","layer":"Core","domain":"reporting"},"type":"module","externalCalls":[]},{"id":"src/reporting/text.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":21,"complexity":5},"label":"Text","layer":"Core","domain":"reporting"},"type":"module","externalCalls":[]},{"id":"src/types.ts","metadata":{"type":"module","source":"inferred","inheritance":[],"decorators":[],"metrics":{"sloc":32,"complexity":1},"label":"Types","layer":"Core","domain":"shared"},"type":"module","externalCalls":[]},{"id":"validateAgentBrainRepo","metadata":{"type":"external","source":"inferred","label":"validateAgentBrainRepo","layer":"External","domain":"shared"},"type":"external","label":"validateAgentBrainRepo","externalCalls":[]},{"id":"writeBrainRepo","metadata":{"type":"external","source":"inferred","label":"writeBrainRepo","layer":"External","domain":"shared"},"type":"external","label":"writeBrainRepo","externalCalls":[]},{"id":"writeRepoFiles","metadata":{"type":"external","source":"inferred","label":"writeRepoFiles","layer":"External","domain":"shared"},"type":"external","label":"writeRepoFiles","externalCalls":[]}],"edges":[{"id":"src/apply/dry-run.ts->node:crypto:import","from":"src/apply/dry-run.ts","to":"node:crypto","type":"import"},{"id":"src/apply/live-materializer.ts->node:fs:import","from":"src/apply/live-materializer.ts","to":"node:fs","type":"import"},{"id":"src/apply/live-materializer.ts->node:path:import","from":"src/apply/live-materializer.ts","to":"node:path","type":"import"},{"id":"src/apply/snapshot-store.ts->node:fs:import","from":"src/apply/snapshot-store.ts","to":"node:fs","type":"import"},{"id":"src/apply/snapshot-store.ts->node:path:import","from":"src/apply/snapshot-store.ts","to":"node:path","type":"import"},{"id":"src/apply/snapshot-store.ts->writeRepoFiles:external-call","from":"src/apply/snapshot-store.ts","to":"writeRepoFiles","type":"external-call"},{"id":"src/apply/verifier.ts->node:crypto:import","from":"src/apply/verifier.ts","to":"node:crypto","type":"import"},{"id":"src/apply/verifier.ts->node:path:import","from":"src/apply/verifier.ts","to":"node:path","type":"import"},{"id":"src/apply/verifier.ts->repo:external-call","from":"src/apply/verifier.ts","to":"repo","type":"external-call"},{"id":"src/cli.ts->node:fs:import","from":"src/cli.ts","to":"node:fs","type":"import"},{"id":"src/cli.ts->node:url:import","from":"src/cli.ts","to":"node:url","type":"import"},{"id":"src/cli.ts->renderJsonReport:external-call","from":"src/cli.ts","to":"renderJsonReport","type":"external-call"},{"id":"src/cli.ts->renderTextReport:external-call","from":"src/cli.ts","to":"renderTextReport","type":"external-call"},{"id":"src/commands/apply.ts->node:path:import","from":"src/commands/apply.ts","to":"node:path","type":"import"},{"id":"src/commands/apply.ts->readAgentBrainRepo:external-call","from":"src/commands/apply.ts","to":"readAgentBrainRepo","type":"external-call"},{"id":"src/commands/import.ts->repoWrite:external-call","from":"src/commands/import.ts","to":"repoWrite","type":"external-call"},{"id":"src/commands/import.ts->writeBrainRepo:external-call","from":"src/commands/import.ts","to":"writeBrainRepo","type":"external-call"},{"id":"src/commands/import.ts->writeRepoFiles:external-call","from":"src/commands/import.ts","to":"writeRepoFiles","type":"external-call"},{"id":"src/commands/verify.ts->repoFromPlan:external-call","from":"src/commands/verify.ts","to":"repoFromPlan","type":"external-call"},{"id":"src/core/live-fs-port.ts->node:fs:import","from":"src/core/live-fs-port.ts","to":"node:fs","type":"import"},{"id":"src/core/live-fs-port.ts->node:path:import","from":"src/core/live-fs-port.ts","to":"node:path","type":"import"},{"id":"src/core/model.ts->node:path:import","from":"src/core/model.ts","to":"node:path","type":"import"},{"id":"src/core/model.ts->repo:external-call","from":"src/core/model.ts","to":"repo","type":"external-call"},{"id":"src/core/path-safety.ts->node:path:import","from":"src/core/path-safety.ts","to":"node:path","type":"import"},{"id":"src/core/repo-reader.ts->node:fs:import","from":"src/core/repo-reader.ts","to":"node:fs","type":"import"},{"id":"src/core/repo-reader.ts->node:path:import","from":"src/core/repo-reader.ts","to":"node:path","type":"import"},{"id":"src/core/repo-reader.ts->readRepoManifest:external-call","from":"src/core/repo-reader.ts","to":"readRepoManifest","type":"external-call"},{"id":"src/core/repo-reader.ts->repo:external-call","from":"src/core/repo-reader.ts","to":"repo","type":"external-call"},{"id":"src/core/repo-reader.ts->validateAgentBrainRepo:external-call","from":"src/core/repo-reader.ts","to":"validateAgentBrainRepo","type":"external-call"},{"id":"src/core/repo-writer.ts->node:fs:import","from":"src/core/repo-writer.ts","to":"node:fs","type":"import"},{"id":"src/core/repo-writer.ts->node:path:import","from":"src/core/repo-writer.ts","to":"node:path","type":"import"},{"id":"src/core/scannable-fixture.ts->node:fs:import","from":"src/core/scannable-fixture.ts","to":"node:fs","type":"import"},{"id":"src/core/sync-status.ts->repo:external-call","from":"src/core/sync-status.ts","to":"repo","type":"external-call"},{"id":"src/import/source-detectors.ts->node:path:import","from":"src/import/source-detectors.ts","to":"node:path","type":"import"},{"id":"src/import/source-reader.ts->node:fs:import","from":"src/import/source-reader.ts","to":"node:fs","type":"import"},{"id":"src/import/source-reader.ts->node:path:import","from":"src/import/source-reader.ts","to":"node:path","type":"import"},{"id":"src/materialize/lock-store.ts->node:fs:import","from":"src/materialize/lock-store.ts","to":"node:fs","type":"import"},{"id":"src/materialize/lock-store.ts->node:path:import","from":"src/materialize/lock-store.ts","to":"node:path","type":"import"},{"id":"src/materialize/lock-store.ts->writeRepoFiles:external-call","from":"src/materialize/lock-store.ts","to":"writeRepoFiles","type":"external-call"},{"id":"src/materialize/target-planner.ts->input:external-call","from":"src/materialize/target-planner.ts","to":"input","type":"external-call"},{"id":"src/materialize/target-planner.ts->node:path:import","from":"src/materialize/target-planner.ts","to":"node:path","type":"import"}],"version":"0.4.16"};
+        let currentView = 'high-level'; 
+        let currentDirection = 'LR';
+        let currentLayer = null;
+        let currentDomain = null;
+        let scale = 1;
+
+        mermaid.initialize({ 
+            startOnLoad: false,
+            theme: 'base',
+            securityLevel: 'loose',
+            flowchart: { 
+                useMaxWidth: false, 
+                htmlLabels: true, 
+                curve: 'basis',
+                rankspacing: 80,
+                nodespacing: 50
+            },
+            themeVariables: {
+                primaryColor: '#ffffff',
+                primaryTextColor: '#1e293b',
+                primaryBorderColor: '#cbd5e1',
+                lineColor: '#94a3b8',
+                secondaryColor: '#f8fafc',
+                tertiaryColor: '#f1f5f9'
+            }
+        });
+
+        window.onNodeClick = (id) => {
+            if (currentView === 'high-level' && id.startsWith('n_dom_')) {
+                // ID is n_dom_LAYER_DOMAIN
+                const parts = id.split('_');
+                const layer = parts[2];
+                const domain = parts.slice(3).join('_');
+                drillDown(layer, domain);
+            }
+        };
+
+        function drillDown(layer, domain) {
+            currentLayer = layer;
+            currentDomain = domain;
+            currentView = 'drill-down';
+            updateUI();
+            render();
+        }
+
+        window.resetView = () => {
+            currentView = 'high-level';
+            currentLayer = null;
+            currentDomain = null;
+            updateUI();
+            render();
+        };
+
+        window.changeView = (view) => {
+            currentView = view;
+            currentLayer = null;
+            currentDomain = null;
+            updateUI();
+            render();
+        };
+
+        function updateUI() {
+            const badge = document.getElementById('context-badge');
+            const backBtn = document.getElementById('back-btn');
+            const viewGroup = document.getElementById('view-group');
+            
+            if (currentView === 'drill-down') {
+                badge.style.display = 'block';
+                badge.innerText = currentLayer.toUpperCase() + ' > ' + currentDomain.toUpperCase();
+                backBtn.style.display = 'flex';
+                viewGroup.style.opacity = '0.4';
+                viewGroup.style.pointerEvents = 'none';
+            } else {
+                badge.style.display = 'none';
+                backBtn.style.display = 'none';
+                viewGroup.style.opacity = '1';
+                viewGroup.style.pointerEvents = 'all';
+            }
+
+            document.querySelectorAll('#view-group button').forEach(b => {
+                b.classList.remove('active');
+                if (b.id === 'btn-' + currentView) b.classList.add('active');
+            });
+        }
+
+        window.setDirection = (dir) => {
+            currentDirection = dir;
+            document.querySelectorAll('#direction-group button').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-' + dir).classList.add('active');
+            render();
+        };
+
+        async function render() {
+            const syntax = generateMermaidSyntax();
+            const container = document.getElementById('mermaid-graph');
+            container.removeAttribute('data-processed');
+            container.innerHTML = syntax;
+            try {
+                await mermaid.run({ nodes: [container] });
+            } catch (err) {
+                console.error('Rendering failed', err);
+            }
+            applyZoom();
+        }
+
+        function generateMermaidSyntax() {
+            let syntax = 'flowchart ' + currentDirection + '\n';
+            
+            if (currentView === 'high-level') {
+                const domainMap = new Map();
+                graph.nodes.forEach(n => {
+                    const layer = n.metadata.layer || 'Core';
+                    const domain = n.metadata.domain || 'shared';
+                    const key = layer + '::' + domain;
+                    if (!domainMap.has(key)) domainMap.set(key, { layer, domain, count: 0 });
+                    domainMap.get(key).count++;
+                });
+
+                const layers = [...new Set(graph.nodes.map(n => n.metadata.layer || 'Core'))];
+                layers.forEach(layer => {
+                    syntax += '  subgraph ' + safeId(layer) + ' ["' + cleanLabel(layer) + '"]\n';
+                    [...domainMap.values()].filter(d => d.layer === layer).forEach(d => {
+                        const id = getDomainId(d.layer, d.domain);
+                        syntax += '    ' + id + '["' + cleanLabel(d.domain) + ' <small>(' + d.count + ' files)</small>"]\n';
+                        syntax += '    click ' + id + ' call onNodeClick("' + id + '")\n';
+                    });
+                    syntax += '  end\n';
+                });
+
+                const domainEdges = new Set();
+                graph.edges.forEach(e => {
+                    const fromNode = graph.nodes.find(n => n.id === e.from);
+                    const toNode = graph.nodes.find(n => n.id === e.to);
+                    if (fromNode && toNode) {
+                        const from = getDomainId(fromNode.metadata.layer || 'Core', fromNode.metadata.domain || 'shared');
+                        const to = getDomainId(toNode.metadata.layer || 'Core', toNode.metadata.domain || 'shared');
+                        if (from !== to) domainEdges.add(from + ' --> ' + to);
+                    }
+                });
+                domainEdges.forEach(e => syntax += '  ' + e + '\n');
+
+            } else {
+                const nodes = currentView === 'drill-down' 
+                    ? graph.nodes.filter(n => 
+                        (n.metadata.layer || 'Core') === currentLayer && 
+                        (n.metadata.domain || 'shared') === currentDomain
+                      )
+                    : graph.nodes;
+                
+                const nodeIds = new Set(nodes.map(n => n.id));
+
+                if (currentView === 'drill-down') {
+                    syntax += '  subgraph ' + safeId(currentLayer + '_' + currentDomain) + ' ["' + cleanLabel(currentLayer).toUpperCase() + ' > ' + cleanLabel(currentDomain).toUpperCase() + '"]\n';
+                }
+                
+                nodes.forEach(n => {
+                    const label = n.id.split('/').pop();
+                    syntax += '    ' + safeId(n.id) + '["' + cleanLabel(label) + '"]\n';
+                });
+
+                if (currentView === 'drill-down') {
+                    syntax += '  end\n';
+                }
+
+                graph.edges.forEach(e => {
+                    if (nodeIds.has(e.from) && nodeIds.has(e.to)) {
+                        syntax += '  ' + safeId(e.from) + ' --> ' + safeId(e.to) + '\n';
+                    }
+                });
+            }
+            
+            return syntax;
+        }
+
+        function getDomainId(layer, domain) {
+            return safeId('dom_' + layer + '_' + domain);
+        }
+
+        function safeId(id) {
+            return 'n_' + id.replace(/[^a-zA-Z0-9]/g, '_');
+        }
+
+        function cleanLabel(label) {
+            if (!label) return 'unnamed';
+            return label.replace(/[^a-zA-Z0-9 \.\-_]/g, '').trim();
+        }
+
+        window.zoom = (delta) => { scale = Math.max(0.1, scale + delta); applyZoom(); };
+        window.resetZoom = () => { scale = 1; applyZoom(); };
+        function applyZoom() {
+            const svg = document.querySelector('.mermaid svg');
+            if (svg) {
+                svg.style.transform = 'scale(' + scale + ')';
+                svg.style.transformOrigin = 'top center';
+            }
+        }
+
+        render();
+    </script>
+</body>
+</html>

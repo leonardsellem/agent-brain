@@ -30,6 +30,76 @@ The canonical model is deliberately smaller than an app home directory:
 
 Claude Code and Codex are the MVP adapters. Their layouts can diverge while still sharing Agent Brain's ownership vocabulary.
 
+## Visual Overview
+
+These diagrams combine the current repository architecture generated with `architecture-diagram-generator` and the product model captured in the Agent Brain project notes. For the raw generated module map, see [architecture generator output](docs/diagrams/architecture-generator-output.md) and the [interactive dashboard](docs/diagrams/architecture-generator-output.html).
+
+### Product Model
+
+```mermaid
+flowchart LR
+  Sources["Import sources<br/>(dotstate, chezmoi, stow, bare dotfiles, home dirs)"]
+  Classifier["Discovery + ownership classifier<br/>portable, generated, native, runtime, local, secret, foreign, unknown"]
+  Repo["Agent Brain repo<br/>packages + profiles + provenance + exclusions"]
+  Locks["Materialization locks<br/>adapter output paths + fingerprints"]
+  Targets["Agent app targets<br/>Claude Code + Codex"]
+  Conflict["Conflict explanation<br/>semantic recommendation"]
+
+  Sources --> Classifier
+  Classifier --> Repo
+  Repo --> Locks
+  Locks --> Targets
+  Classifier --> Conflict
+  Repo --> Conflict
+```
+
+### Safe Live Apply Transaction
+
+```mermaid
+sequenceDiagram
+  participant User
+  participant CLI as agent-brain CLI
+  participant Repo as Agent Brain repo
+  participant Target as App target root
+
+  User->>CLI: apply --repo --target-root --adapter --profile
+  CLI->>Repo: read packages, profiles, provenance
+  CLI->>Target: build dry-run plan
+  CLI-->>User: fingerprint + planned creates/updates/moves/symlinks
+  User->>CLI: rerun with --confirm-fingerprint
+  CLI->>Target: capture baseline snapshot
+  CLI->>Target: apply only planned paths
+  CLI->>Repo: write materialization lock + rollback metadata
+  CLI->>Target: verify generated state and remaining risks
+  CLI-->>User: verification report + rollback path
+```
+
+### Current Implementation Modules
+
+```mermaid
+flowchart TB
+  CLI["src/cli.ts<br/>command router + report selection"]
+  Commands["src/commands/*<br/>doctor/import/apply/verify/rollback/bootstrap/explain-conflict"]
+  Core["src/core/*<br/>model, provenance, classification, path safety, repo IO"]
+  Adapters["src/adapters/*<br/>Claude Code + Codex semantics"]
+  Import["src/import/*<br/>source detection, live scanning, adoption plans"]
+  Apply["src/apply/* + src/materialize/*<br/>dry-run, snapshots, target planning, locks, verifier"]
+  Conflict["src/conflict/*<br/>ownership-based explanations"]
+  Reporting["src/reporting/*<br/>text + JSON output"]
+  FS["Filesystem/git ports<br/>fixture-first tests, live roots only when explicit"]
+
+  CLI --> Commands
+  Commands --> Core
+  Commands --> Reporting
+  Core --> Adapters
+  Commands --> Import
+  Commands --> Apply
+  Commands --> Conflict
+  Import --> FS
+  Apply --> FS
+  Core --> FS
+```
+
 ## Ownership Vocabulary
 
 Agent Brain reports diagnosis, import, verification, and conflict results using the same categories everywhere:
