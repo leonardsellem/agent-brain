@@ -1,6 +1,7 @@
 import path from "node:path";
 import type { Snapshot } from "./snapshot.js";
 import { writeRepoFiles } from "../core/repo-writer.js";
+import { readFileSync } from "node:fs";
 
 export interface SnapshotWriteResult {
   path: string;
@@ -15,4 +16,8 @@ export function writeSnapshot(repoRoot: string, snapshot: Snapshot): SnapshotWri
   return {
     path: written.writtenPaths[0]!
   };
+}
+
+export function readSnapshot(snapshotPath: string): Snapshot {
+  return JSON.parse(readFileSync(snapshotPath, "utf8")) as Snapshot;
 }

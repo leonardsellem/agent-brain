@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -79,5 +79,53 @@ describe("live apply transaction", () => {
         })
       })
     ]);
+
+    const verified = await cli.run([
+      "verify",
+      "--repo",
+      repo,
+      "--target-root",
+      targetRoot,
+      "--adapter",
+      "claude-code",
+      "--json"
+    ]);
+    expect(verified.exitCode).toBe(0);
+    expect(JSON.parse(verified.stdout).findings[0]).toMatchObject({
+      id: "verify.checked",
+      path: targetRoot
+    });
+
+    writeFileSync(path.join(targetRoot, "skills/review/SKILL.md"), "# Manual edit\n");
+    const drifted = await cli.run([
+      "verify",
+      "--repo",
+      repo,
+      "--target-root",
+      targetRoot,
+      "--adapter",
+      "claude-code",
+      "--json"
+    ]);
+    expect(drifted.exitCode).toBe(1);
+    expect(JSON.parse(drifted.stdout).findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "generated-target-drift",
+          path: path.join(targetRoot, "skills/review/SKILL.md")
+        })
+      ])
+    );
+
+    const rolledBack = await cli.run([
+      "rollback",
+      "--snapshot",
+      report.findings[0].provenance.snapshotPath,
+      "--target-root",
+      targetRoot,
+      "--json"
+    ]);
+    expect(rolledBack.exitCode).toBe(0);
+    expect(existsSync(path.join(targetRoot, "skills/review/SKILL.md"))).toBe(false);
   });
 });

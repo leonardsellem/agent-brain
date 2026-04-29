@@ -1,3 +1,5 @@
+import { restoreLiveSnapshot } from "../apply/live-materializer.js";
+import { readSnapshot } from "../apply/snapshot-store.js";
 import type { CommandHandler } from "../types.js";
 
 export function createRollbackCommand(): CommandHandler {
@@ -11,6 +13,29 @@ export function createRollbackCommand(): CommandHandler {
           message: "rollback requires --snapshot metadata"
         },
         findings: []
+      };
+    }
+
+    const targetRoot = optionValue(args, "--target-root");
+    if (targetRoot) {
+      const loaded = readSnapshot(snapshot);
+      const restored = restoreLiveSnapshot(targetRoot, loaded);
+      return {
+        ok: true,
+        summary: `restored ${restored.changedPaths.length} paths from ${snapshot}`,
+        findings: [
+          {
+            id: "rollback.restored",
+            severity: "info",
+            category: "generated-target",
+            path: targetRoot,
+            message: "Restored target root from snapshot metadata",
+            provenance: {
+              snapshotPath: snapshot,
+              restoredPaths: restored.changedPaths
+            }
+          }
+        ]
       };
     }
 
