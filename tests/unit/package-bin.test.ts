@@ -20,9 +20,9 @@ describe("package binary contract", () => {
     };
     const binTarget = packageJson.bin?.["agent-brain"];
 
-    expect(binTarget).toBe("./dist/cli.js");
+    expect(binTarget).toBe("dist/cli.js");
 
-    const absoluteBinTarget = path.join(repoRoot, binTarget!.replace(/^\.\//, ""));
+    const absoluteBinTarget = path.join(repoRoot, binTarget!);
     expect(existsSync(absoluteBinTarget)).toBe(true);
 
     const result = spawnSync(process.execPath, [absoluteBinTarget, "--help"], {

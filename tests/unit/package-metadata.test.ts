@@ -31,7 +31,7 @@ describe("npm package metadata", () => {
     const packageJson = readPackageJson();
 
     expect(packageJson.name).toBe("@leonardsellem/agent-brain");
-    expect(packageJson.bin).toEqual({ "agent-brain": "./dist/cli.js" });
+    expect(packageJson.bin).toEqual({ "agent-brain": "dist/cli.js" });
     expect(packageJson.engines?.node).toBe(">=20");
   });
 
