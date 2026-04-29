@@ -7,6 +7,7 @@ describe("agent-brain CLI", () => {
     "import",
     "plan",
     "apply",
+    "bootstrap",
     "verify",
     "rollback",
     "explain-conflict"

@@ -5,6 +5,7 @@ import { loadScannableFixture, ScannableFixtureError } from "./core/scannable-fi
 import { createLiveScannableFsPort } from "./import/live-scanner.js";
 import type { CommandContext, CommandHandler, FsPort, Report } from "./types.js";
 import { createApplyCommand } from "./commands/apply.js";
+import { createBootstrapCommand } from "./commands/bootstrap.js";
 import { createDoctorCommand } from "./commands/doctor.js";
 import { createExplainConflictCommand } from "./commands/explain-conflict.js";
 import { createImportCommand, createPlanCommand } from "./commands/import.js";
@@ -27,6 +28,7 @@ type CommandName =
   | "import"
   | "plan"
   | "apply"
+  | "bootstrap"
   | "verify"
   | "rollback"
   | "explain-conflict";
@@ -36,6 +38,7 @@ const commandPurposes: Record<CommandName, string> = {
   import: "Import portable source into an Agent Brain repo plan.",
   plan: "Show proposed adoption or apply changes before writing.",
   apply: "Apply approved Agent Brain materialization into target app roots.",
+  bootstrap: "Bootstrap a target app root from an Agent Brain repo.",
   verify: "Verify generated target state and remaining risks.",
   rollback: "Restore a target root from a baseline snapshot.",
   "explain-conflict": "Explain conflicts using Agent Brain ownership terms."
@@ -128,6 +131,7 @@ function defaultCommands(): Record<CommandName, CommandHandler> {
     import: createImportCommand(),
     plan: createPlanCommand(),
     apply: createApplyCommand(),
+    bootstrap: createBootstrapCommand(),
     verify: createVerifyCommand(),
     rollback: createRollbackCommand(),
     "explain-conflict": createExplainConflictCommand()
