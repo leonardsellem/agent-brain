@@ -1,0 +1,42 @@
+{
+  "root": "tests/fixtures/e2e-persona",
+  "entries": [
+    {
+      "path": "~/.claude/skills",
+      "kind": "directory",
+      "adapters": ["claude-code"],
+      "realPath": "/synthetic/shared-skills"
+    },
+    {
+      "path": "~/.codex/skills",
+      "kind": "directory",
+      "adapters": ["codex"],
+      "realPath": "/synthetic/shared-skills"
+    },
+    {
+      "path": "~/.claude/skills/review/SKILL.md",
+      "kind": "file",
+      "adapter": "claude-code",
+      "realPath": "/synthetic/shared-skills/review/SKILL.md",
+      "contentSample": "# Review\n"
+    },
+    {
+      "path": "~/.codex/cache/history.jsonl",
+      "kind": "file",
+      "adapter": "codex",
+      "contentSample": "{\"type\":\"history\"}\n"
+    },
+    {
+      "path": "~/.codex/auth.json",
+      "kind": "file",
+      "adapter": "codex",
+      "contentSample": "{\"token\":\"fake-token-for-classification-only\"}\n"
+    },
+    {
+      "path": "~/.claude/projects/project-a/local.json",
+      "kind": "file",
+      "adapter": "claude-code",
+      "contentSample": "{\"machine\":\"synthetic\"}\n"
+    }
+  ]
+}

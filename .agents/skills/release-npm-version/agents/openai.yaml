@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release npm Version"
+  short_description: "Prepare an Agent Brain npm release"
+  default_prompt: "Use $release-npm-version to prepare a major or minor npm release."

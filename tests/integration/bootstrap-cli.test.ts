@@ -1,0 +1,51 @@
+import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { describe, expect, it } from "vitest";
+import { createCli } from "../../src/cli.js";
+
+describe("bootstrap command", () => {
+  it("materializes a second-machine target from Agent Brain repo intent", async () => {
+    const machineA = mkdtempSync(path.join(os.tmpdir(), "agent-brain-machine-a-"));
+    const repo = mkdtempSync(path.join(os.tmpdir(), "agent-brain-repo-"));
+    const machineBTarget = mkdtempSync(path.join(os.tmpdir(), "agent-brain-machine-b-"));
+    const skillPath = path.join(machineA, ".dotstate/storage/Personal/.claude/skills/review/SKILL.md");
+    mkdirSync(path.dirname(skillPath), { recursive: true });
+    writeFileSync(skillPath, "# Portable Review\n");
+    const cli = createCli();
+    expect((await cli.run(["import", "--source-root", machineA, "--repo", repo, "--json"])).exitCode).toBe(0);
+
+    const dryRun = await cli.run([
+      "bootstrap",
+      "--repo",
+      repo,
+      "--target-root",
+      machineBTarget,
+      "--adapter",
+      "claude-code",
+      "--profile",
+      "profile.default",
+      "--json"
+    ]);
+    const fingerprint = JSON.parse(dryRun.stdout).findings[0].provenance.fingerprint;
+
+    const applied = await cli.run([
+      "bootstrap",
+      "--repo",
+      repo,
+      "--target-root",
+      machineBTarget,
+      "--adapter",
+      "claude-code",
+      "--profile",
+      "profile.default",
+      "--confirm-fingerprint",
+      fingerprint,
+      "--json"
+    ]);
+
+    expect(applied.exitCode).toBe(0);
+    expect(existsSync(path.join(machineBTarget, "skills/review/SKILL.md"))).toBe(true);
+    expect(JSON.stringify(JSON.parse(applied.stdout))).not.toContain(machineA);
+  });
+});
