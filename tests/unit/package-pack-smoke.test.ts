@@ -25,5 +25,6 @@ describe("npm package smoke check", () => {
     expect(result.stdout).toContain("agent-brain pack smoke passed");
     expect(result.stdout).toContain("dist/cli.js");
     expect(result.stdout).not.toMatch(/tests\/|docs\/plans\/|docs\/brainstorms\/|\.brv\/|artifacts\/|tmp\//);
+    expect(result.stdout).not.toMatch(/docs\/live-personal-npm-e2e/);
   });
 });

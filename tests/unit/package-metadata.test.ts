@@ -66,9 +66,18 @@ describe("npm package metadata", () => {
       "LICENSE",
       "docs/npm-release.md"
     ]);
-    expect(packageJson.files).not.toEqual(
-      expect.arrayContaining(["tests/", "docs/plans/", "docs/brainstorms/", ".brv/", "artifacts/", "tmp/"])
-    );
+    for (const forbiddenPackagePath of [
+      "tests/",
+      "docs/plans/",
+      "docs/brainstorms/",
+      "docs/live-personal-npm-e2e-protocol.md",
+      "docs/live-personal-npm-e2e-findings-template.md",
+      ".brv/",
+      "artifacts/",
+      "tmp/"
+    ]) {
+      expect(packageJson.files).not.toContain(forbiddenPackagePath);
+    }
   });
 
   it("keeps optional transitive package metadata complete for cross-platform npm ci", () => {
