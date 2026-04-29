@@ -1,6 +1,7 @@
 import { detectSharedRootRisk } from "../adapters/index.js";
 import { classifyEntry } from "../core/classification.js";
 import { isScannableFsPort } from "../core/fs-port.js";
+import { detectImportSources } from "../import/source-detectors.js";
 import type { CommandHandler, Finding } from "../types.js";
 
 export function createDoctorCommand(): CommandHandler {
@@ -28,6 +29,20 @@ export function createDoctorCommand(): CommandHandler {
     const classified = context.fs.entries.map((entry) => classifyEntry(entry));
     for (const entry of classified) {
       findings.push(...entry.findings);
+    }
+
+    for (const source of detectImportSources(context.fs.entries)) {
+      findings.push({
+        id: "import-source",
+        severity: "info",
+        category: "source",
+        path: source.root,
+        message: `Detected ${source.kind} import source`,
+        provenance: {
+          sourceKind: source.kind,
+          confidence: source.confidence
+        }
+      });
     }
 
     findings.push(

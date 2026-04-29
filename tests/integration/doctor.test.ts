@@ -55,10 +55,14 @@ describe("doctor command", () => {
     const json = await cli.run(["doctor", "--json"]);
 
     expect(text.stdout).toContain("shared-root");
-    expect(JSON.parse(json.stdout).findings[0]).toMatchObject({
-      id: "shared-root",
-      severity: "high"
-    });
+    expect(JSON.parse(json.stdout).findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "shared-root",
+          severity: "high"
+        })
+      ])
+    );
   });
 
   it("reports unreadable paths without stopping the full scan", async () => {

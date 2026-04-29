@@ -2,6 +2,7 @@
 import { renderJsonReport } from "./reporting/json.js";
 import { renderTextReport } from "./reporting/text.js";
 import { loadScannableFixture, ScannableFixtureError } from "./core/scannable-fixture.js";
+import { createLiveScannableFsPort } from "./import/live-scanner.js";
 import type { CommandContext, CommandHandler, FsPort, Report } from "./types.js";
 import { createApplyCommand } from "./commands/apply.js";
 import { createDoctorCommand } from "./commands/doctor.js";
@@ -91,7 +92,9 @@ export function createCli(options: CliOptions = {}) {
       }
 
       const fixturePath = optionValue(args, "--fixture");
-      const commandFs = fixturePath ? loadFixtureForCli(fixturePath) : { fs };
+      const commandFs = fixturePath
+        ? loadFixtureForCli(fixturePath)
+        : loadLiveRootsForCli(args) ?? { fs };
       if ("error" in commandFs) {
         const report: Report = {
           ok: false,
@@ -107,7 +110,7 @@ export function createCli(options: CliOptions = {}) {
       }
 
       const context: CommandContext = { fs: commandFs.fs };
-      const report = await commands[rawCommand](context, stripOption(args, "--fixture"));
+      const report = await commands[rawCommand](context, stripLiveOptions(stripOption(args, "--fixture")));
       const stdout = wantsJson ? renderJsonReport(report) : renderTextReport(report);
 
       return {
@@ -153,7 +156,10 @@ function validateArgs(args: string[]) {
     "--repo",
     "--snapshot",
     "--fixture",
-    "--confirm-fingerprint"
+    "--confirm-fingerprint",
+    "--claude-root",
+    "--codex-root",
+    "--source-root"
   ]);
 
   for (let index = 0; index < args.length; index += 1) {
@@ -180,6 +186,17 @@ function optionValue(args: string[], option: string): string | undefined {
   return optionIndex === -1 ? undefined : args[optionIndex + 1];
 }
 
+function optionValues(args: string[], option: string): string[] {
+  const values: string[] = [];
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] === option && args[index + 1]) {
+      values.push(args[index + 1]!);
+      index += 1;
+    }
+  }
+  return values;
+}
+
 function stripOption(args: string[], option: string): string[] {
   const stripped: string[] = [];
   for (let index = 0; index < args.length; index += 1) {
@@ -190,6 +207,31 @@ function stripOption(args: string[], option: string): string[] {
     stripped.push(args[index]!);
   }
   return stripped;
+}
+
+function stripLiveOptions(args: string[]): string[] {
+  return ["--claude-root", "--codex-root", "--source-root"].reduce(
+    (currentArgs, option) => stripOption(currentArgs, option),
+    args
+  );
+}
+
+function loadLiveRootsForCli(args: string[]): { fs: FsPort } | undefined {
+  const claudeRoots = optionValues(args, "--claude-root");
+  const codexRoots = optionValues(args, "--codex-root");
+  const sourceRoots = optionValues(args, "--source-root");
+
+  if (claudeRoots.length === 0 && codexRoots.length === 0 && sourceRoots.length === 0) {
+    return undefined;
+  }
+
+  return {
+    fs: createLiveScannableFsPort({
+      claudeRoots,
+      codexRoots,
+      sourceRoots
+    })
+  };
 }
 
 function loadFixtureForCli(fixturePath: string):
