@@ -1,5 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import { resolveContainedPath, safeRelativePath } from "./path-safety.js";
 
 export interface RepoWriteResult {
   writtenPaths: string[];
@@ -22,14 +23,10 @@ export function writeRepoFiles(repoRoot: string, files: Record<string, string>):
 }
 
 function safeDestination(root: string, relativePath: string): string {
-  if (path.isAbsolute(relativePath) || relativePath.split(/[\\/]/).includes("..")) {
+  try {
+    safeRelativePath(relativePath);
+    return resolveContainedPath(root, relativePath);
+  } catch {
     throw new Error(`Refusing to write outside repo destination: ${relativePath}`);
   }
-
-  const destination = path.resolve(root, relativePath);
-  if (destination !== root && !destination.startsWith(`${root}${path.sep}`)) {
-    throw new Error(`Refusing to write outside repo destination: ${relativePath}`);
-  }
-
-  return destination;
 }
