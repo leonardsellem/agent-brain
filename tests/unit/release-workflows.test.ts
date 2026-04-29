@@ -51,12 +51,18 @@ describe("release workflow guards", () => {
     expect(workflow).not.toMatch(/npm publish|publish --provenance/);
   });
 
-  it("requires release prep handoff to keep dev synchronized with main", () => {
+  it("requires release skill to publish after merge while keeping dev synchronized with main", () => {
     const skill = read(".agents/skills/release-npm-version/SKILL.md");
 
     expect(skill).toContain("Fetch origin and inspect `origin/dev` and `origin/main`.");
     expect(skill).toContain("Fast-forward `dev` from `main` and push it:");
     expect(skill).toContain("git merge --ff-only origin/main");
     expect(skill).toContain("Do not force-push `dev`.");
+    expect(skill).toContain("Publish the merged release");
+    expect(skill).toContain("gh release create v<nextVersion>");
+    expect(skill).toContain("Wait for the publish workflow");
+    expect(skill).toContain("npm view @leonardsellem/agent-brain@<nextVersion> version");
+    expect(skill).not.toContain("Do not run `git tag`, push `v*` tags, or otherwise create the tag that triggers publishing.");
+    expect(skill).not.toContain("Do not publish npm until this PR is merged and the release tag or GitHub Release is intentionally created.");
   });
 });
