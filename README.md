@@ -30,6 +30,22 @@ The canonical model is deliberately smaller than an app home directory:
 
 Claude Code and Codex are the MVP adapters. Their layouts can diverge while still sharing Agent Brain's ownership vocabulary.
 
+## Visual Overview
+
+The diagrams below use the same dark, SVG-based architecture-diagram style as the `/architecture-diagram-generator` skill examples, with content grounded in the current TypeScript CLI structure and the Agent Brain project model. Open the [standalone diagram gallery](docs/diagrams/agent-brain-diagrams.html) for a larger view.
+
+### Product Model
+
+![Agent Brain product model](docs/diagrams/agent-brain-product-model.svg)
+
+### Safe Live Apply Transaction
+
+![Agent Brain safe live apply transaction](docs/diagrams/agent-brain-safe-apply.svg)
+
+### Current Implementation Modules
+
+![Agent Brain implementation module architecture](docs/diagrams/agent-brain-implementation.svg)
+
 ## Ownership Vocabulary
 
 Agent Brain reports diagnosis, import, verification, and conflict results using the same categories everywhere:
