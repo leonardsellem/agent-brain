@@ -33,3 +33,7 @@ Claude Code and Codex are the first adapters. They may expose similar concepts t
 ## Drift Handling
 
 When an app changes config, skill, plugin, hook, or MCP semantics, update the relevant adapter facts and contract tests. Do not change canonical package/profile/provenance fields unless the durable product model itself needs to evolve.
+
+## Conflict Parity
+
+Conflict explanation reuses the same vocabulary as diagnosis, import, verify, and adapters. A conflict in Codex generated output and a conflict in Claude Code generated output can have different paths while sharing the same `generated-target` recommendation.

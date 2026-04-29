@@ -24,3 +24,7 @@ Live target mutation must follow this sequence:
 4. Narrow mutation through an adapter.
 5. Verification.
 6. Rollback metadata.
+
+## Conflict Explanation
+
+Conflicts should be explained in ownership terms. Portable source conflicts are resolved in Agent Brain package/profile files. Generated target conflicts should be regenerated from canonical intent. Runtime, cache, auth, local-only, foreign, and unknown paths should not be merged into canonical source without explicit classification.

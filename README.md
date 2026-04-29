@@ -23,3 +23,7 @@ agent-brain explain-conflict
 ```
 
 The first implementation focuses on diagnosis, import, dry-run, snapshot, apply, verify, rollback, and conflict explanation for Claude Code and Codex targets.
+
+## Ownership Terms
+
+Agent Brain reports conflicts and scan results as ownership categories: portable source, generated target, native-owned app state, runtime/cache state, machine-local state, secret material, foreign-owned files, or unknown material.
