@@ -32,7 +32,20 @@ The handoff is a verified release-prep PR plus exact next steps for the human re
 3. **Preflight**
    - Confirm package name is `@leonardsellem/agent-brain` and the CLI bin is `agent-brain`.
    - Confirm `git status --short` is clean before starting. If not clean, ask whether to stop or continue on the dirty branch.
-   - Fetch origin and inspect the current branch. Prefer starting from `dev`; if currently on another branch, ask before using it as the release base.
+   - Fetch origin and inspect `origin/dev` and `origin/main`.
+   - Prefer preparing release changes from `dev`, then opening the release PR to `main`.
+   - If the release branch must start from `main` instead, say why in the handoff and keep the PR target as `main`.
+   - If `dev` is behind `main`, pause and sync it first with a fast-forward-only update before preparing the release:
+
+     ```bash
+     git fetch origin
+     git switch dev
+     git merge --ff-only origin/main
+     git push origin dev
+     ```
+
+     If fast-forward is impossible, stop and ask whether to resolve the branch divergence with a normal PR or merge workflow. Do not force-push `dev`.
+   - If currently on another branch, ask before using it as the release base.
    - Run the bundled helper in dry-run mode to compute the next version:
 
      ```bash
@@ -87,13 +100,26 @@ The handoff is a verified release-prep PR plus exact next steps for the human re
    - Commit with `chore(release): prepare v<nextVersion>`.
    - Push the release branch.
    - Open a PR to `main` unless the user explicitly chose another base.
-   - PR body must include summary, verification results, the next publish action, and this warning:
+   - PR body must include summary, verification results, the next publish action, the post-merge `dev` sync requirement, and this warning:
 
      `Do not publish npm until this PR is merged and the release tag or GitHub Release is intentionally created.`
 
 8. **Handoff**
    - Tell the user the prepared version, branch, commit, PR URL, and verification results.
-   - State exactly what remains: configure/confirm npm Trusted Publisher if needed, merge the PR, then intentionally publish the GitHub Release or push the release tag.
+   - State exactly what remains:
+     1. Configure/confirm npm Trusted Publisher if needed.
+     2. Merge the release PR into `main`.
+     3. Fast-forward `dev` from `main` and push it:
+
+        ```bash
+        git fetch origin
+        git switch dev
+        git merge --ff-only origin/main
+        git push origin dev
+        ```
+
+        If `dev` cannot fast-forward, stop and resolve the divergence by PR/merge before publishing.
+     4. Intentionally publish the GitHub Release or push the release tag.
    - Record durable knowledge with GBrain/ByteRover when meaningful.
 
 ## Helper Script

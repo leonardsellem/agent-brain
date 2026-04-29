@@ -50,4 +50,13 @@ describe("release workflow guards", () => {
     expect(workflow).toContain("npm audit --audit-level=moderate");
     expect(workflow).not.toMatch(/npm publish|publish --provenance/);
   });
+
+  it("requires release prep handoff to keep dev synchronized with main", () => {
+    const skill = read(".agents/skills/release-npm-version/SKILL.md");
+
+    expect(skill).toContain("Fetch origin and inspect `origin/dev` and `origin/main`.");
+    expect(skill).toContain("Fast-forward `dev` from `main` and push it:");
+    expect(skill).toContain("git merge --ff-only origin/main");
+    expect(skill).toContain("Do not force-push `dev`.");
+  });
 });
