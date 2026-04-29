@@ -46,6 +46,25 @@ const docs = [
     ]
   },
   {
+    path: "docs/release-e2e-rehearsal.md",
+    headings: [
+      "## Persona",
+      "## Evidence Protocol",
+      "## Finding Taxonomy",
+      "## Safety Boundary",
+      "## Mission Script"
+    ]
+  },
+  {
+    path: "docs/release-e2e-findings.md",
+    headings: [
+      "## Verdict",
+      "## Evidence",
+      "## Findings",
+      "## Follow-Up"
+    ]
+  },
+  {
     path: "AGENTS.md",
     headings: [
       "## Product Boundary",
@@ -87,5 +106,13 @@ describe("companion documentation", () => {
         );
       }
     }
+  });
+
+  it("keeps release rehearsal fixtures synthetic and documented", () => {
+    const fixtureReadme = readFileSync(path.join(repoRoot, "tests/fixtures/e2e-persona/README.md"), "utf8");
+
+    expect(fixtureReadme).toContain("messy but synthetic Claude Code and Codex setup");
+    expect(fixtureReadme).toContain("must never contain copied live app state");
+    expect(fixtureReadme).toContain("Fixture Map");
   });
 });

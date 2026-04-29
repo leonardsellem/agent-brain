@@ -9,6 +9,18 @@ describe("conflict explanation", () => {
     });
   });
 
+  it("renders home-expanded paths as home-relative display paths", () => {
+    const home = process.env.HOME;
+    if (!home) {
+      return;
+    }
+
+    expect(explainConflict({ path: `${home}/.codex/auth.json` })).toMatchObject({
+      path: "~/.codex/auth.json",
+      classification: "secret"
+    });
+  });
+
   it("recommends regenerating generated output instead of hand-merging", () => {
     expect(
       explainConflict({

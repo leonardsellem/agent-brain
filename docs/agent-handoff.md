@@ -6,7 +6,7 @@ Start with [AGENTS.md](../AGENTS.md) for binding repo instructions, then use thi
 
 ## Current Posture
 
-Agent Brain is a pre-1.0 TypeScript CLI. The implementation is fixture-first and test-driven. Claude Code and Codex are materialization targets, while the Agent Brain repo owns portable package/profile intent.
+Agent Brain is a pre-1.0 TypeScript CLI. The current release surface is a fixture-backed developer preview: public commands consume `tests/fixtures/e2e-persona/scannable.json`, while live home scanning and live app-root mutation remain outside the release claim. Claude Code and Codex are materialization targets, while the Agent Brain repo owns portable package/profile intent.
 
 Important boundaries:
 
@@ -14,6 +14,7 @@ Important boundaries:
 - Do not copy secrets, auth material, runtime caches, histories, or machine-local overrides into packages by default.
 - Do not link published docs to local project-memory paths outside the repo.
 - Keep app-specific layout knowledge in adapters and tests.
+- Keep preview import writes under an explicit destination such as `tmp/agent-brain-preview`; root `tmp/` is gitignored for local rehearsal output.
 - Keep branch work on `dev` unless the user explicitly asks for a different integration flow.
 
 ## Start of Session
@@ -55,6 +56,14 @@ Documentation changes should also run the documentation guards:
 
 ```bash
 npm test -- tests/unit/readme.test.ts tests/unit/docs.test.ts
+```
+
+Release-surface changes should also run:
+
+```bash
+npm test -- tests/integration/release-cli.test.ts
+npm run build
+node dist/cli.js --help
 ```
 
 Before final handoff:

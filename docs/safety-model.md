@@ -16,7 +16,7 @@ The default posture is conservative. If Agent Brain cannot explain what owns a p
 
 ## Transaction Lifecycle
 
-Live apply follows this sequence:
+Live apply follows this sequence. In the current developer preview, the public CLI proves the sequence against structured fixtures and disposable virtual targets; real app-root mutation remains deferred.
 
 1. Build a dry-run plan with every create, update, move, remove, and symlink change.
 2. Compute a fingerprint for that exact dry-run.
@@ -58,13 +58,16 @@ Explicit override should be rare, provenance-bearing, and visible in reports.
 
 Before using a live app root:
 
-1. Run `agent-brain doctor` and inspect high-severity findings.
-2. Run `agent-brain import` or `agent-brain plan` against a fixture or controlled scan first.
-3. Review exclusions, unknowns, shared-root risks, and secret findings.
-4. Confirm that the dry-run only touches paths Agent Brain should own.
-5. Confirm the exact dry-run fingerprint.
-6. Keep the snapshot location and rollback command visible before apply.
-7. Run `agent-brain verify` after apply.
+1. Run `agent-brain doctor --fixture tests/fixtures/e2e-persona/scannable.json` and inspect high-severity findings.
+2. Run `agent-brain plan --fixture tests/fixtures/e2e-persona/scannable.json` before writing.
+3. Write only to an explicit repo destination with `agent-brain import --fixture tests/fixtures/e2e-persona/scannable.json --repo tmp/agent-brain-preview`.
+4. Review exclusions, unknowns, shared-root risks, and secret findings.
+5. Confirm that the dry-run only touches paths Agent Brain should own.
+6. Confirm the exact dry-run fingerprint with `--confirm-fingerprint` only after reviewing the dry-run output.
+7. Keep the snapshot location and rollback command visible before apply.
+8. Run `agent-brain verify --fixture tests/fixtures/e2e-persona/scannable.json --target-root /synthetic/target` after apply.
+
+The public `apply`, `verify`, and `rollback` commands fail closed when required evidence is missing. A missing target, fixture, fingerprint, lock context, or snapshot metadata should produce an error rather than a reassuring success summary.
 
 If verification reports high-severity drift or missing generated targets, do not treat the apply as complete until the finding is fixed or tracked as real work.
 

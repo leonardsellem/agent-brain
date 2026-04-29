@@ -4,6 +4,31 @@ import { createDoctorCommand } from "../../src/commands/doctor.js";
 import type { ScannableFsPort } from "../../src/core/fs-port.js";
 
 describe("doctor command", () => {
+  it("fails actionably when no scannable fixture is supplied", async () => {
+    const cli = createCli({
+      commands: {
+        doctor: createDoctorCommand()
+      }
+    });
+
+    const result = await cli.run(["doctor", "--json"]);
+    const report = JSON.parse(result.stdout);
+
+    expect(result.exitCode).toBe(1);
+    expect(report).toMatchObject({
+      ok: false,
+      error: {
+        code: "fixture_required"
+      },
+      findings: [
+        expect.objectContaining({
+          id: "fixture-required",
+          recommendation: "Run agent-brain doctor --fixture tests/fixtures/e2e-persona/scannable.json"
+        })
+      ]
+    });
+  });
+
   it("produces text and JSON reports for shared-root fixture scans", async () => {
     const fs = fixtureFs([
       {
