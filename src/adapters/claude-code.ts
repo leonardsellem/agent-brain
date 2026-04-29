@@ -9,7 +9,7 @@ export const claudeCodeAdapter: TargetAdapter = {
     return classifyByRules(candidatePath, [
       [/^~\/\.claude\/settings(\.local)?\.json$/, role("native-owned", "user-settings", 0.9)],
       [/^\.claude\/settings(\.local)?\.json$/, role("native-owned", "project-settings", 0.85)],
-      [/^~\/\.claude\/skills\/.+\/SKILL\.md$/, role("portable-source", "personal-skill", 0.95)],
+      [/(^|\/)\.claude\/skills\/.+\/SKILL\.md$/, role("portable-source", "personal-skill", 0.95)],
       [/^\.claude\/skills\/.+\/SKILL\.md$/, role("portable-source", "project-skill", 0.95)],
       [/^~\/\.claude\/plugins\/.+/, role("native-owned", "plugin-surface", 0.8)],
       [/^\.claude\/agents\/.+\.md$/, role("portable-source", "project-subagent", 0.9)],

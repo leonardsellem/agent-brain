@@ -11,7 +11,7 @@ export const codexAdapter: TargetAdapter = {
       [/^\.codex\/config\.toml$/, role("portable-source", "trusted-project-config", 0.9)],
       [/^AGENTS\.md$/, role("portable-source", "project-instructions", 0.95)],
       [/^~\/\.agents\/skills\/.+\/SKILL\.md$/, role("portable-source", "user-skill", 0.95)],
-      [/^~\/\.codex\/skills\/.+\/SKILL\.md$/, role("portable-source", "legacy-user-skill", 0.75)],
+      [/(^|\/)\.codex\/skills\/.+\/SKILL\.md$/, role("portable-source", "legacy-user-skill", 0.75)],
       [/^~\/\.codex\/agents\/.+\.md$/, role("portable-source", "user-agent", 0.85)],
       [/^~\/\.codex\/hooks\//, role("portable-source", "hook", 0.8)],
       [/^~\/\.codex\/plugins\/cache\//, role("runtime-cache", "plugin-cache", 0.95)],
