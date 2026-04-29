@@ -4,7 +4,7 @@ title: Agent Brain Agent Instructions
 
 # Agent Brain Agent Instructions
 
-This repository is the implementation codebase for Agent Brain. The GBrain folder at `/Users/leonardsellem/Library/Mobile Documents/iCloud~md~obsidian/Documents/gbrain-brain/projects/agent-brain` is project memory and documentation only; do not put product code there.
+This repository is the implementation codebase for Agent Brain. External project-memory folders may contain plans and durable notes, but product code belongs in this repository.
 
 ## Working Rules
 
@@ -18,9 +18,8 @@ This repository is the implementation codebase for Agent Brain. The GBrain folde
 
 ## Repository Boundary
 
-- Codebase: `/Users/leonardsellem/Dev/agent-brain`
 - Private repo: `https://github.com/leonardsellem/agent-brain`
-- Project memory: `gbrain-brain/projects/agent-brain/`
+- Project memory: external planning and durable-note systems only; do not treat them as implementation folders.
 
 ## Branch Policy
 

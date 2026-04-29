@@ -7,7 +7,6 @@ It is not a generic dotfiles mirror. Claude Code, Codex, dotstate, chezmoi, stow
 ## Repository
 
 - Private GitHub repo: `https://github.com/leonardsellem/agent-brain`
-- Local working tree: `/Users/leonardsellem/Dev/agent-brain`
 - Default branch: `dev`
 - Integration branch: `main`
 

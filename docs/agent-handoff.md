@@ -4,9 +4,9 @@ Agent Brain is a local CLI for making AI coding-agent capability state portable,
 
 ## Codebase vs Memory
 
-- Implementation code lives in `/Users/leonardsellem/Dev/agent-brain`.
-- Durable project memory lives in `gbrain-brain/projects/agent-brain/`.
-- Update GBrain docs when product decisions change, but keep product code in this repository.
+- Implementation code lives in this repository.
+- Durable project memory may live in external planning systems.
+- Update external project memory when product decisions change, but keep product code in this repository.
 
 ## Development Loop
 
