@@ -121,6 +121,8 @@ agent-brain --help
 
 Run against a disposable or explicitly approved setup first. Live commands require explicit roots, dry-run fingerprint confirmation, a baseline snapshot, a materialization lock, verify, rollback, and bootstrap evidence before a target is considered healthy.
 
+For real tracked `.codex`, `.claude`, and `.dotstate` folders, use the [personal live npm E2E protocol](docs/live-personal-npm-e2e-protocol.md) before any mutation. It keeps the npm-installed, Computer Use-visible pass non-mutating until a fresh Ring 2 approval names the exact dry-run fingerprint and recovery evidence.
+
 Run the live release path against disposable roots:
 
 ```bash

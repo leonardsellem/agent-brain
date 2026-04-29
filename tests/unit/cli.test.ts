@@ -23,6 +23,21 @@ describe("agent-brain CLI", () => {
     expect(result.stdout).not.toContain(process.env.HOME ?? "");
   });
 
+  it("shows command-specific options in help output", async () => {
+    const cli = createCli();
+
+    const doctor = await cli.run(["doctor", "--help"]);
+    const apply = await cli.run(["apply", "--help"]);
+
+    expect(doctor.stdout).toContain("--claude-root");
+    expect(doctor.stdout).toContain("--codex-root");
+    expect(doctor.stdout).toContain("--source-root");
+    expect(doctor.stdout).toContain("--json");
+    expect(apply.stdout).toContain("--target-root");
+    expect(apply.stdout).toContain("--confirm-fingerprint");
+    expect(apply.stdout).toContain("--adapter");
+  });
+
   it("returns a readable suggestion list for unknown commands", async () => {
     const cli = createCli();
 

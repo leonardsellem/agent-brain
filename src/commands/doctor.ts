@@ -2,6 +2,7 @@ import { detectSharedRootRisk } from "../adapters/index.js";
 import { classifyEntry } from "../core/classification.js";
 import { isScannableFsPort } from "../core/fs-port.js";
 import { detectImportSources } from "../import/source-detectors.js";
+import type { ScannableEntry } from "../core/fs-port.js";
 import type { CommandHandler, Finding } from "../types.js";
 
 export function createDoctorCommand(): CommandHandler {
@@ -26,6 +27,8 @@ export function createDoctorCommand(): CommandHandler {
     }
 
     const findings: Finding[] = [];
+    findings.push(...scanFindings(context.fs.entries));
+
     const classified = context.fs.entries.map((entry) => classifyEntry(entry));
     for (const entry of classified) {
       findings.push(...entry.findings);
@@ -72,6 +75,38 @@ export function createDoctorCommand(): CommandHandler {
       findings: dedupeFindings(findings)
     };
   };
+}
+
+function scanFindings(entries: ScannableEntry[]): Finding[] {
+  return entries.flatMap((entry) => {
+    if (entry.scanStatus === "skipped") {
+      const finding: Finding = {
+        id: "scan.skipped-directory",
+        severity: "medium",
+        category: "runtime-cache",
+        path: entry.path,
+        message: entry.error ?? "Skipped recursive scan of cache-like or generated directory",
+        recommendation: "Inspect manually only if this directory is expected to contain portable source"
+      };
+      return [
+        finding
+      ];
+    }
+
+    if (entry.scanStatus === "truncated") {
+      const finding: Finding = {
+        id: "scan.truncated",
+        severity: "high",
+        category: "unknown",
+        path: entry.path,
+        message: entry.error ?? "Live scan stopped before all entries were read",
+        recommendation: "Narrow the explicit root or increase the scan limit before trusting the diagnosis"
+      };
+      return [finding];
+    }
+
+    return [];
+  });
 }
 
 function dedupeFindings(findings: Finding[]): Finding[] {

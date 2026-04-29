@@ -10,6 +10,8 @@ This rehearsal covers the public live-migration path for disposable Claude Code 
 
 Fixture-backed commands remain useful as a safe demo path, but public live-readiness is gated by the live command sequence below.
 
+For the owner's real tracked `.codex`, `.claude`, and `.dotstate` folders, use the stricter [live personal npm E2E protocol](live-personal-npm-e2e-protocol.md). That protocol starts with an npm-installed, Computer Use-visible, non-mutating pass and only allows live mutation after a fresh Ring 2 approval.
+
 ## Command Rehearsal
 
 ```bash

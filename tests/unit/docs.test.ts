@@ -75,6 +75,42 @@ const docs = [
     ]
   },
   {
+    path: "docs/live-personal-npm-e2e-protocol.md",
+    headings: [
+      "## Scope",
+      "## Ring 0 Readiness Gate",
+      "## Ring 1 Non-Mutating npm Pass",
+      "## Ring 2 Owner-Approved Live Mutation Pass",
+      "## Private Artifact Handling",
+      "## Finding Taxonomy",
+      "## Go/No-Go Handoff"
+    ]
+  },
+  {
+    path: "docs/live-personal-npm-e2e-findings-template.md",
+    headings: [
+      "## Verdict",
+      "## Environment",
+      "## Ring 0 Readiness",
+      "## Ring 1 Evidence",
+      "## Ring 2 Decision",
+      "## Findings",
+      "## Follow-Up"
+    ]
+  },
+  {
+    path: "docs/live-personal-npm-e2e-findings.md",
+    headings: [
+      "## Verdict",
+      "## Environment",
+      "## Ring 0 Readiness",
+      "## Ring 1 Evidence",
+      "## Ring 2 Decision",
+      "## Findings",
+      "## Follow-Up"
+    ]
+  },
+  {
     path: "docs/npm-release.md",
     headings: [
       "## Scope",
@@ -135,5 +171,68 @@ describe("companion documentation", () => {
     expect(fixtureReadme).toContain("messy but synthetic Claude Code and Codex setup");
     expect(fixtureReadme).toContain("must never contain copied live app state");
     expect(fixtureReadme).toContain("Fixture Map");
+  });
+
+  it("guards the personal live npm protocol safety gates", () => {
+    const protocol = readFileSync(path.join(repoRoot, "docs/live-personal-npm-e2e-protocol.md"), "utf8");
+
+    for (const phrase of [
+      "tracked-root recoverability",
+      "local-change status",
+      "Computer Use-visible",
+      "non-mutating",
+      "fresh owner approval",
+      "exact dry-run fingerprint",
+      "baseline snapshot",
+      "rollback or approved recovery evidence",
+      "post-test diff inspection",
+      "artifacts/live-personal-npm-e2e/"
+    ]) {
+      expect(protocol).toContain(phrase);
+    }
+  });
+
+  it("guards the personal live findings template against raw evidence leakage", () => {
+    const template = readFileSync(path.join(repoRoot, "docs/live-personal-npm-e2e-findings-template.md"), "utf8");
+
+    for (const phrase of [
+      "go/no-go verdict",
+      "sanitized reproduction context",
+      "raw screenshots",
+      "terminal logs",
+      "auth material",
+      "must not be copied into this tracked template",
+      "Ring 2 skipped",
+      "release blocker",
+      "trust gap"
+    ]) {
+      expect(template).toContain(phrase);
+    }
+  });
+
+  it("keeps adjacent release docs aligned with the personal live protocol", () => {
+    const releaseRehearsal = readFileSync(path.join(repoRoot, "docs/release-e2e-rehearsal.md"), "utf8");
+    const liveRehearsal = readFileSync(path.join(repoRoot, "docs/release-live-e2e-rehearsal.md"), "utf8");
+    const handoff = readFileSync(path.join(repoRoot, "docs/agent-handoff.md"), "utf8");
+    const safetyModel = readFileSync(path.join(repoRoot, "docs/safety-model.md"), "utf8");
+
+    expect(releaseRehearsal).toContain("[live personal npm E2E protocol](live-personal-npm-e2e-protocol.md)");
+    expect(liveRehearsal).toContain("[live personal npm E2E protocol](live-personal-npm-e2e-protocol.md)");
+    expect(handoff).toContain("[live personal npm E2E protocol](live-personal-npm-e2e-protocol.md)");
+    expect(safetyModel).toContain("[live personal npm E2E protocol](live-personal-npm-e2e-protocol.md)");
+    expect(handoff).not.toContain("live home scanning and live app-root mutation remain outside the release claim");
+    expect(safetyModel).not.toContain("real app-root mutation remains deferred");
+  });
+
+  it("keeps the personal live findings report sanitized", () => {
+    const findings = readFileSync(path.join(repoRoot, "docs/live-personal-npm-e2e-findings.md"), "utf8");
+
+    expect(findings).toContain("go for the bounded personal-live canary release claim");
+    expect(findings).toContain("Ring 1 result: passed");
+    expect(findings).toContain("Ring 2 result: passed");
+    expect(findings).toContain("Rollback status: proven");
+    expect(findings).toContain("Node heap out of memory");
+    expect(findings).toContain("terminal app access was unavailable");
+    expect(findings).not.toContain("artifacts/live-personal-npm-e2e/20260429-225639-ring1");
   });
 });
