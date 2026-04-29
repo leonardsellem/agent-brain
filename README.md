@@ -52,6 +52,7 @@ agent-brain plan
 agent-brain apply
 agent-brain verify
 agent-brain rollback
+agent-brain bootstrap
 agent-brain explain-conflict <path>
 ```
 
@@ -65,21 +66,24 @@ All commands support text output by default and structured output with `--json` 
 | `apply` | Materialize approved Agent Brain state into target app roots. |
 | `verify` | Check generated target state and remaining risks. |
 | `rollback` | Restore from snapshot metadata. |
+| `bootstrap` | Materialize a second-machine target from an Agent Brain repo. |
 | `explain-conflict` | Classify a conflicted path and recommend a semantic resolution. |
 
-The current implementation is a fixture-backed developer preview. Public commands can consume a structured scannable fixture with `--fixture`; live home-directory scanning and live app-root mutation remain deferred until the adapter-backed safety loop is fully wired for real targets.
+The current implementation supports both a fixture-backed preview path and an explicit live path for disposable or user-approved roots. Live commands require explicit roots, adapter/profile selection, a dry-run fingerprint, a baseline snapshot, a materialization lock, verify, rollback, and bootstrap evidence before the target is considered healthy.
 
 ## Safety Model
 
 Live target mutation is treated as a transaction:
 
-1. Build a dry-run plan with every create, update, move, and symlink change.
-2. Compute a fingerprint for that exact dry-run.
-3. Require explicit confirmation of the fingerprint.
-4. Capture a baseline snapshot before mutation.
-5. Apply only the paths listed in the dry-run.
-6. Verify target state.
-7. Keep rollback metadata.
+1. Start from explicit roots supplied on the command line.
+2. Build a dry-run plan with every create, update, move, and symlink change.
+3. Compute a dry-run fingerprint for that exact operation set.
+4. Require explicit confirmation of the fingerprint.
+5. Capture a baseline snapshot before mutation.
+6. Apply only the paths listed in the dry-run.
+7. Write a materialization lock.
+8. Verify target state.
+9. Keep rollback metadata.
 
 Runtime state, caches, auth material, secret-like content, and machine-local overrides are excluded from canonical source by default.
 
@@ -116,6 +120,20 @@ node dist/cli.js explain-conflict '~/.claude/skills/review/SKILL.md' --json
 
 `apply` reports a dry-run fingerprint unless you pass the exact `--confirm-fingerprint` value from that dry-run. `rollback` fails until snapshot metadata is supplied; that is intentional and prevents a missing rollback record from looking successful.
 
+Run the live release path against disposable roots:
+
+```bash
+node dist/cli.js doctor --claude-root tmp/live-claude --codex-root tmp/live-codex --source-root tmp/live-source --json
+node dist/cli.js import --source-root tmp/live-source --repo tmp/agent-brain-live --json
+node dist/cli.js apply --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --profile profile.default --json
+node dist/cli.js apply --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --profile profile.default --confirm-fingerprint sha256:from-dry-run --json
+node dist/cli.js verify --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --json
+node dist/cli.js rollback --snapshot tmp/agent-brain-live/.agent-brain/snapshots/snap-from-dry-run.json --target-root tmp/live-target --json
+node dist/cli.js bootstrap --repo tmp/agent-brain-live --target-root tmp/live-target-b --adapter claude-code --profile profile.default --json
+```
+
+Use disposable roots first. The same safety gates apply to real app roots: explicit roots, dry-run fingerprint, baseline snapshot, materialization lock, verify, rollback, and bootstrap from canonical intent rather than copying full app homes.
+
 ## Development
 
 This repository is optimized for agent-native development:
@@ -146,7 +164,7 @@ Near-term:
 
 - Deepen real Claude Code and Codex adapter fixtures.
 - Expand import heuristics for dotstate, chezmoi, stow, bare dotfiles, and unmanaged home roots.
-- Harden live apply confirmation, snapshot storage, verification, and rollback metadata.
+- Harden release evidence around live apply confirmation, snapshot storage, verification, and rollback metadata.
 - Improve conflict explanations for generated targets, runtime files, and unsafe shared roots.
 
 Later:

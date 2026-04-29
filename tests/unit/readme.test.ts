@@ -50,7 +50,24 @@ describe("README", () => {
     expect(readme).toContain("node dist/cli.js doctor --fixture tests/fixtures/e2e-persona/scannable.json");
     expect(readme).toContain("node dist/cli.js import --fixture tests/fixtures/e2e-persona/scannable.json --repo tmp/agent-brain-preview");
     expect(readme).toContain("node dist/cli.js apply --fixture tests/fixtures/e2e-persona/scannable.json --target-root /synthetic/target --json");
+    expect(readme).toContain("node dist/cli.js bootstrap --repo tmp/agent-brain-live --target-root tmp/live-target-b --adapter claude-code --profile profile.default --json");
     expect(readme).toContain("node dist/cli.js explain-conflict '~/.codex/history.jsonl'");
     expect(readme).not.toContain("node dist/cli.js explain-conflict ~/.codex/history.jsonl");
+  });
+
+  it("documents the live safety gates before live migration commands", () => {
+    const readme = readFileSync(readmePath, "utf8");
+
+    for (const phrase of [
+      "explicit roots",
+      "dry-run fingerprint",
+      "baseline snapshot",
+      "materialization lock",
+      "verify",
+      "rollback",
+      "bootstrap"
+    ]) {
+      expect(readme).toContain(phrase);
+    }
   });
 });

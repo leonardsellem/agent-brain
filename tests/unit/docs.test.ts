@@ -56,6 +56,16 @@ const docs = [
     ]
   },
   {
+    path: "docs/release-live-e2e-rehearsal.md",
+    headings: [
+      "## Scope",
+      "## Command Rehearsal",
+      "## Requirement Trace",
+      "## Safety Evidence",
+      "## Remaining Release Checks"
+    ]
+  },
+  {
     path: "docs/release-e2e-findings.md",
     headings: [
       "## Verdict",
