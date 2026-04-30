@@ -41,7 +41,8 @@ export function createDefaultDiagnosisScannableFsPort(): ScannableFsPort {
     entries: scanned.entries.map((entry) => ({
       ...entry,
       path: toDisplayPath(entry.path),
-      realPath: entry.realPath ? toDisplayPath(entry.realPath) : undefined
+      realPath: entry.realPath ? toDisplayPath(entry.realPath) : undefined,
+      error: entry.error ? toDisplayPath(entry.error) : undefined
     }))
   };
 }
