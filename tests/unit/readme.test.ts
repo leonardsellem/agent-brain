@@ -29,6 +29,7 @@ describe("README", () => {
 
     expect(readme).toContain("https://www.npmjs.com/package/@leonardsellem/agent-brain");
     expect(readme).toContain("agent-brain --help");
+    expect(readme).toContain("agent-brain setup");
     expect(npmInstallIndex).toBeGreaterThan(-1);
     expect(contributorIndex).toBeGreaterThan(-1);
     expect(npmInstallIndex).toBeLessThan(contributorIndex);
@@ -64,7 +65,8 @@ describe("README", () => {
     expect(readme).toContain("node dist/cli.js import --fixture tests/fixtures/e2e-persona/scannable.json --repo tmp/agent-brain-preview");
     expect(readme).toContain("node dist/cli.js apply --fixture tests/fixtures/e2e-persona/scannable.json --target-root /synthetic/target --json");
     expect(readme).toContain('AB_DEMO="$(pwd)/tmp/agent-brain-demo"');
-    expect(readme).toContain('agent-brain import --claude-root "$AB_DEMO/live-claude" --repo "$AB_DEMO/agent-brain-live" --json');
+    expect(readme).toContain('agent-brain setup --repo "$AB_DEMO/agent-brain-live" --json');
+    expect(readme).toContain('agent-brain setup --repo "$AB_DEMO/agent-brain-live" --confirm-import --json');
     expect(readme).toContain("FINGERPRINT=");
     expect(readme).toContain("SNAPSHOT=");
     expect(readme).toContain('agent-brain bootstrap --repo "$AB_DEMO/agent-brain-live" --target-root "$AB_DEMO/live-target-b" --adapter claude-code --profile profile.default --json');
@@ -78,21 +80,21 @@ describe("README", () => {
     const readme = readFileSync(readmePath, "utf8");
 
     for (const phrase of [
-      "The important mental model: every command needs to know which source it is looking at, except `doctor`.",
-      "`agent-brain doctor` can run with no arguments.",
-      "`agent-brain plan` previews adoption from an input source and therefore needs `--claude-root`, `--codex-root`, `--source-root`, or `--fixture`.",
-      "`agent-brain import` needs one of those same input sources plus `--repo <path>` because it writes the canonical Agent Brain repo output.",
-      'agent-brain plan --claude-root "$AB_DEMO/live-claude" --json',
-      'agent-brain import --claude-root "$AB_DEMO/live-claude" --repo "$AB_DEMO/agent-brain-live" --json'
+      "The important mental model: start with `agent-brain setup` unless you already know the exact expert flags you need.",
+      "`agent-brain setup` can run with no arguments.",
+      "It discovers `~/.claude`, `~/.codex`, and `~/.agents` read-only, follows symlinks for evidence, summarizes portable candidates and exclusions, and stops before writing.",
+      "`agent-brain setup --confirm-import` writes the canonical Agent Brain repo after you review the summary.",
+      'agent-brain setup --repo "$AB_DEMO/agent-brain-live" --json',
+      'agent-brain setup --repo "$AB_DEMO/agent-brain-live" --confirm-import --json'
     ]) {
       expect(readme).toContain(phrase);
     }
 
-    expect(readme.indexOf("agent-brain doctor")).toBeLessThan(
-      readme.indexOf('agent-brain plan --claude-root "$AB_DEMO/live-claude"')
+    expect(readme.indexOf("agent-brain setup")).toBeLessThan(
+      readme.indexOf("### Expert commands")
     );
-    expect(readme.indexOf('agent-brain plan --claude-root "$AB_DEMO/live-claude"')).toBeLessThan(
-      readme.indexOf('agent-brain import --claude-root "$AB_DEMO/live-claude"')
+    expect(readme.indexOf('agent-brain setup --repo "$AB_DEMO/agent-brain-live" --json')).toBeLessThan(
+      readme.indexOf('agent-brain setup --repo "$AB_DEMO/agent-brain-live" --confirm-import --json')
     );
   });
 
@@ -121,6 +123,9 @@ describe("README", () => {
     expect(protocolLinkIndex).toBeGreaterThan(-1);
     expect(protocolLinkIndex).toBeGreaterThan(disposableGuidanceIndex);
     expect(readme).not.toContain("agent-brain apply --repo ~/.agent-brain");
+    expect(readme).not.toContain("--yes");
+    expect(readme).not.toMatch(/unattended live mutation/i);
+    expect(readme).not.toMatch(/replace entire|whole-root rewrite/i);
   });
 
   it("welcomes contributors through the dedicated contributing guide", () => {
