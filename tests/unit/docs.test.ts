@@ -66,15 +66,6 @@ const docs = [
     ]
   },
   {
-    path: "docs/release-e2e-findings.md",
-    headings: [
-      "## Verdict",
-      "## Evidence",
-      "## Findings",
-      "## Follow-Up"
-    ]
-  },
-  {
     path: "docs/live-personal-npm-e2e-protocol.md",
     headings: [
       "## Scope",
@@ -88,18 +79,6 @@ const docs = [
   },
   {
     path: "docs/live-personal-npm-e2e-findings-template.md",
-    headings: [
-      "## Verdict",
-      "## Environment",
-      "## Ring 0 Readiness",
-      "## Ring 1 Evidence",
-      "## Ring 2 Decision",
-      "## Findings",
-      "## Follow-Up"
-    ]
-  },
-  {
-    path: "docs/live-personal-npm-e2e-findings.md",
     headings: [
       "## Verdict",
       "## Environment",
@@ -192,6 +171,7 @@ describe("companion documentation", () => {
       "tracked-root recoverability",
       "local-change status",
       "Computer Use-visible",
+      "If Computer Use refuses terminal apps",
       "non-mutating",
       "fresh owner approval",
       "exact dry-run fingerprint",
@@ -236,15 +216,13 @@ describe("companion documentation", () => {
     expect(safetyModel).not.toContain("real app-root mutation remains deferred");
   });
 
-  it("keeps the personal live findings report sanitized", () => {
-    const findings = readFileSync(path.join(repoRoot, "docs/live-personal-npm-e2e-findings.md"), "utf8");
+  it("keeps concrete findings reports out of tracked docs", () => {
+    const releaseRehearsal = readFileSync(path.join(repoRoot, "docs/release-e2e-rehearsal.md"), "utf8");
+    const protocol = readFileSync(path.join(repoRoot, "docs/live-personal-npm-e2e-protocol.md"), "utf8");
 
-    expect(findings).toContain("go for the bounded personal-live canary release claim");
-    expect(findings).toContain("Ring 1 result: passed");
-    expect(findings).toContain("Ring 2 result: passed");
-    expect(findings).toContain("Rollback status: proven");
-    expect(findings).toContain("Node heap out of memory");
-    expect(findings).toContain("terminal app access was unavailable");
-    expect(findings).not.toContain("artifacts/live-personal-npm-e2e/20260429-225639-ring1");
+    expect(existsSync(path.join(repoRoot, "docs/release-e2e-findings.md"))).toBe(false);
+    expect(existsSync(path.join(repoRoot, "docs/live-personal-npm-e2e-findings.md"))).toBe(false);
+    expect(releaseRehearsal).toContain("Concrete findings reports belong under `artifacts/findings/`");
+    expect(protocol).toContain("Raw evidence belongs under `artifacts/live-personal-npm-e2e/`");
   });
 });

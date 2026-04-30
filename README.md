@@ -8,7 +8,7 @@ It is for the moment when your Claude Code and Codex setup works, but you can no
 
 Agent Brain turns that pile of agent app state into portable intent: packages, profiles, provenance, exclusions, adapter targets, and rollback-aware materialization. The core promise is simple: explain the setup first, make it portable second, mutate it only after safety gates.
 
-![Agent Brain turns messy live agent folders into portable intent](docs/diagrams/agent-brain-usp.svg)
+![Agent Brain turns messy live agent folders into portable intent](https://raw.githubusercontent.com/leonardsellem/agent-brain/dev/docs/diagrams/agent-brain-usp.svg)
 
 ## Why Agent Brain
 
@@ -42,9 +42,9 @@ The canonical model is deliberately smaller than an app home directory:
 
 Claude Code and Codex are the MVP adapters. Their layouts can diverge while still sharing Agent Brain's ownership vocabulary.
 
-![Agent Brain canonical model and adapter boundary](docs/diagrams/agent-brain-canonical-model.svg)
+![Agent Brain canonical model and adapter boundary](https://raw.githubusercontent.com/leonardsellem/agent-brain/dev/docs/diagrams/agent-brain-canonical-model.svg)
 
-Open the [standalone diagram gallery](docs/diagrams/agent-brain-diagrams.html) for larger versions of the README diagrams.
+Open the [standalone diagram gallery](https://github.com/leonardsellem/agent-brain/blob/dev/docs/diagrams/agent-brain-diagrams.html) for larger versions of the README diagrams.
 
 ## Ownership Vocabulary
 
@@ -89,7 +89,7 @@ All commands support text output by default and structured output with `--json` 
 
 The current implementation supports both a fixture-backed rehearsal path and an explicit live path for disposable or user-approved roots. Live commands require explicit roots, adapter/profile selection, a dry-run fingerprint, a baseline snapshot, a materialization lock, verify, rollback, and bootstrap evidence before the target is considered healthy.
 
-![Agent Brain command journey for diagnosis, import, planning, apply, verification, rollback, bootstrap, and conflict explanation](docs/diagrams/agent-brain-command-journey.svg)
+![Agent Brain command journey for diagnosis, import, planning, apply, verification, rollback, bootstrap, and conflict explanation](https://raw.githubusercontent.com/leonardsellem/agent-brain/dev/docs/diagrams/agent-brain-command-journey.svg)
 
 ## Safety Model
 
@@ -105,7 +105,7 @@ Live target mutation is treated as a transaction:
 8. Verify target state.
 9. Keep rollback metadata.
 
-![Agent Brain guarded live apply safety model](docs/diagrams/agent-brain-live-safety.svg)
+![Agent Brain guarded live apply safety model](https://raw.githubusercontent.com/leonardsellem/agent-brain/dev/docs/diagrams/agent-brain-live-safety.svg)
 
 Runtime state, caches, auth material, secret-like content, and machine-local overrides are excluded from canonical source by default.
 
@@ -132,17 +132,28 @@ Run against a disposable or explicitly approved setup first. The public release 
 
 Live commands require explicit roots, dry-run fingerprint confirmation, a baseline snapshot, a materialization lock, verify, rollback, and bootstrap evidence before a target is considered healthy.
 
-For real tracked `.codex`, `.claude`, and `.dotstate` folders, use the [personal live npm E2E protocol](docs/live-personal-npm-e2e-protocol.md) before any mutation. It keeps the npm-installed, Computer Use-visible pass non-mutating until a fresh Ring 2 approval names the exact dry-run fingerprint and recovery evidence.
+For real tracked `.codex`, `.claude`, and `.dotstate` folders, use the [personal live npm E2E protocol](https://github.com/leonardsellem/agent-brain/blob/dev/docs/live-personal-npm-e2e-protocol.md) before any mutation. It keeps the npm-installed, Computer Use-visible pass non-mutating until a fresh Ring 2 approval names the exact dry-run fingerprint and recovery evidence.
 
 Run the live release path against disposable roots:
 
 ```bash
-agent-brain doctor --claude-root tmp/live-claude --codex-root tmp/live-codex --source-root tmp/live-source --json
-agent-brain import --source-root tmp/live-source --repo tmp/agent-brain-live --json
-agent-brain apply --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --profile profile.default --json
-agent-brain apply --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --profile profile.default --confirm-fingerprint sha256:from-dry-run --json
+rm -rf tmp/live-claude tmp/live-codex tmp/live-target tmp/live-target-b tmp/agent-brain-live
+mkdir -p tmp/live-claude/skills/review tmp/live-codex
+printf '# Review\n\nPortable disposable skill.\n' > tmp/live-claude/skills/review/SKILL.md
+
+agent-brain doctor --claude-root tmp/live-claude --codex-root tmp/live-codex --json
+agent-brain import --claude-root tmp/live-claude --repo tmp/agent-brain-live --json
+
+DRY_RUN_JSON=$(agent-brain apply --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --profile profile.default --json)
+printf '%s\n' "$DRY_RUN_JSON"
+FINGERPRINT=$(printf '%s' "$DRY_RUN_JSON" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).findings.find(f=>f.id==="apply.dry-run").provenance.fingerprint))')
+
+APPLY_JSON=$(agent-brain apply --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --profile profile.default --confirm-fingerprint "$FINGERPRINT" --json)
+printf '%s\n' "$APPLY_JSON"
+SNAPSHOT=$(printf '%s' "$APPLY_JSON" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).findings.find(f=>f.id==="apply.snapshot-created").provenance.snapshotPath))')
+
 agent-brain verify --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --json
-agent-brain rollback --snapshot tmp/agent-brain-live/.agent-brain/snapshots/snap-from-dry-run.json --target-root tmp/live-target --json
+agent-brain rollback --snapshot "$SNAPSHOT" --target-root tmp/live-target --json
 agent-brain bootstrap --repo tmp/agent-brain-live --target-root tmp/live-target-b --adapter claude-code --profile profile.default --json
 ```
 
@@ -180,7 +191,7 @@ node dist/cli.js explain-conflict '~/.claude/skills/review/SKILL.md' --json
 
 Agent Brain is open to contributors who want agent workspaces to become more legible, portable, and safe. The most helpful contributions improve ownership classification, adapter behavior, CLI safety gates, synthetic fixtures, documentation, release evidence, or the contributor experience around guarded live use.
 
-Start with the [Contributing guide](CONTRIBUTING.md). It covers project boundaries, good first contributions, local setup, TDD expectations, safety rules, pull request checks, and release/security boundaries.
+Start with the [Contributing guide](https://github.com/leonardsellem/agent-brain/blob/dev/CONTRIBUTING.md). It covers project boundaries, good first contributions, local setup, TDD expectations, safety rules, pull request checks, and release/security boundaries.
 
 ## Development
 
@@ -194,12 +205,12 @@ This repository is optimized for agent-native development:
 
 Useful docs:
 
-- [Architecture](docs/architecture.md)
-- [Adapter contract](docs/adapter-contract.md)
-- [Safety model](docs/safety-model.md)
-- [Contributing guide](CONTRIBUTING.md)
-- [Agent handoff](docs/agent-handoff.md)
-- [Agent instructions](AGENTS.md)
+- [Architecture](https://github.com/leonardsellem/agent-brain/blob/dev/docs/architecture.md)
+- [Adapter contract](https://github.com/leonardsellem/agent-brain/blob/dev/docs/adapter-contract.md)
+- [Safety model](https://github.com/leonardsellem/agent-brain/blob/dev/docs/safety-model.md)
+- [Contributing guide](https://github.com/leonardsellem/agent-brain/blob/dev/CONTRIBUTING.md)
+- [Agent handoff](https://github.com/leonardsellem/agent-brain/blob/dev/docs/agent-handoff.md)
+- [Agent instructions](https://github.com/leonardsellem/agent-brain/blob/dev/AGENTS.md)
 
 ## Repository Status
 

@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -18,7 +18,7 @@ describe("release CLI regression", () => {
     expect(build.status, build.stderr).toBe(0);
   });
 
-  it("exercises the public fixture-backed developer-preview workflow", () => {
+  it("exercises the fixture-backed regression workflow", () => {
     const importRepo = mkdtempSync(path.join(os.tmpdir(), "agent-brain-release-cli-"));
 
     try {
@@ -112,10 +112,17 @@ describe("release CLI regression", () => {
   });
 
   it("fails closed when required public inputs are missing", () => {
-    expect(JSON.parse(runCli(["doctor", "--json"]).stdout)).toMatchObject({
-      ok: false,
-      error: { code: "fixture_required" }
-    });
+    const doctor = runCli(["doctor", "--json"]);
+    expect(doctor.status).toBe(0);
+    expect(JSON.parse(doctor.stdout)).toMatchObject({ ok: true });
+    expect(doctor.stdout).not.toContain("developer preview");
+    expect(doctor.stdout).not.toContain("fixture_required");
+    expect(doctor.stdout).not.toContain(process.env.HOME ?? "");
+
+    const version = runCli(["--version"]);
+    expect(version.status).toBe(0);
+    expect(version.stdout).toMatch(/^@leonardsellem\/agent-brain \d+\.\d+\.\d+/);
+
     expect(JSON.parse(runCli(["import", "--fixture", fixturePath, "--json"]).stdout)).toMatchObject({
       ok: false,
       error: { code: "repo_required" }
@@ -128,6 +135,107 @@ describe("release CLI regression", () => {
       ok: false,
       error: { code: "verify_requires_target" }
     });
+  });
+
+  it("exercises a non-empty disposable live lifecycle through rollback and bootstrap", () => {
+    const claudeRoot = mkdtempSync(path.join(os.tmpdir(), "agent-brain-release-claude-"));
+    const repo = mkdtempSync(path.join(os.tmpdir(), "agent-brain-release-repo-"));
+    const targetRoot = mkdtempSync(path.join(os.tmpdir(), "agent-brain-release-target-"));
+    const bootstrapRoot = mkdtempSync(path.join(os.tmpdir(), "agent-brain-release-bootstrap-"));
+    const skillPath = path.join(claudeRoot, "skills/review/SKILL.md");
+
+    try {
+      mkdirSync(path.dirname(skillPath), { recursive: true });
+      writeFileSync(skillPath, "# Release Review\n");
+
+      const imported = runCli(["import", "--claude-root", claudeRoot, "--repo", repo, "--json"]);
+      expect(imported.status).toBe(0);
+      expect(readFileSync(path.join(repo, "packages/review/SKILL.md"), "utf8")).toBe("# Release Review\n");
+
+      const dryRun = runCli([
+        "apply",
+        "--repo",
+        repo,
+        "--target-root",
+        targetRoot,
+        "--adapter",
+        "claude-code",
+        "--profile",
+        "profile.default",
+        "--json"
+      ]);
+      const dryRunReport = JSON.parse(dryRun.stdout);
+      const applyFinding = dryRunReport.findings.find((finding: { id: string }) => finding.id === "apply.dry-run");
+      expect(dryRun.status).toBe(0);
+      expect(applyFinding.provenance.operations).toEqual([
+        expect.objectContaining({
+          path: path.join(targetRoot, "skills/review/SKILL.md"),
+          content: "# Release Review\n"
+        })
+      ]);
+
+      const applied = runCli([
+        "apply",
+        "--repo",
+        repo,
+        "--target-root",
+        targetRoot,
+        "--adapter",
+        "claude-code",
+        "--profile",
+        "profile.default",
+        "--confirm-fingerprint",
+        applyFinding.provenance.fingerprint,
+        "--json"
+      ]);
+      const applyReport = JSON.parse(applied.stdout);
+      expect(applied.status).toBe(0);
+      expect(readFileSync(path.join(targetRoot, "skills/review/SKILL.md"), "utf8")).toBe("# Release Review\n");
+
+      const verified = runCli([
+        "verify",
+        "--repo",
+        repo,
+        "--target-root",
+        targetRoot,
+        "--adapter",
+        "claude-code",
+        "--json"
+      ]);
+      expect(verified.status).toBe(0);
+
+      const rolledBack = runCli([
+        "rollback",
+        "--snapshot",
+        applyReport.findings[0].provenance.snapshotPath,
+        "--target-root",
+        targetRoot,
+        "--json"
+      ]);
+      expect(rolledBack.status).toBe(0);
+      expect(existsSync(path.join(targetRoot, "skills/review/SKILL.md"))).toBe(false);
+
+      const bootstrapDryRun = runCli([
+        "bootstrap",
+        "--repo",
+        repo,
+        "--target-root",
+        bootstrapRoot,
+        "--adapter",
+        "claude-code",
+        "--profile",
+        "profile.default",
+        "--json"
+      ]);
+      const bootstrapReport = JSON.parse(bootstrapDryRun.stdout);
+      expect(bootstrapDryRun.status).toBe(0);
+      expect(bootstrapReport.findings[0].provenance.operations.length).toBeGreaterThan(0);
+    } finally {
+      rmSync(claudeRoot, { recursive: true, force: true });
+      rmSync(repo, { recursive: true, force: true });
+      rmSync(targetRoot, { recursive: true, force: true });
+      rmSync(bootstrapRoot, { recursive: true, force: true });
+    }
   });
 });
 

@@ -15,7 +15,7 @@ Use this protocol when the test target is a real personal agent setup rather tha
 Allowed in Ring 1:
 
 - Install or execute the published npm package in an isolated prefix or other explicit npm test location.
-- Use Computer Use-visible terminal observation for the user journey, so evidence reflects what a real user would see.
+- Use Computer Use-visible terminal observation for the user journey when the desktop safety layer allows terminal app control, so evidence reflects what a real user would see.
 - Run diagnosis, import into an explicit Agent Brain destination, planning, conflict explanation, dry-run apply output, and findings capture.
 - Read tracked-root recoverability and local-change status from git without changing the live roots.
 
@@ -60,7 +60,7 @@ Run the journey as a real user would:
 5. Run `plan`, `explain-conflict`, and dry-run `apply` commands that produce reviewable intent without writing to the live target.
 6. Collect frictions, mismatches, missing docs, confusing output, and trust gaps into the sanitized findings shape.
 
-Ring 1 is incomplete if the evidence is shell-only and not Computer Use-visible. Shell logs can supplement the pass, but the final report should say what the user visibly saw.
+Ring 1 should include Computer Use-visible terminal evidence when the harness permits it. If Computer Use refuses terminal apps or the selected terminal is blocked by desktop safety policy, record that limitation explicitly and supplement with shell evidence instead of pretending terminal-visible evidence passed.
 
 Ring 1 stop conditions:
 

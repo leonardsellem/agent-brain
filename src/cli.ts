@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-import { realpathSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { renderJsonReport } from "./reporting/json.js";
 import { renderTextReport } from "./reporting/text.js";
 import { loadScannableFixture, ScannableFixtureError } from "./core/scannable-fixture.js";
-import { createLiveScannableFsPort } from "./import/live-scanner.js";
+import { createDefaultDiagnosisScannableFsPort, createLiveScannableFsPort } from "./import/live-scanner.js";
 import type { CommandContext, CommandHandler, FsPort, Report } from "./types.js";
 import { createApplyCommand } from "./commands/apply.js";
 import { createBootstrapCommand } from "./commands/bootstrap.js";
@@ -50,6 +50,7 @@ const commandNames = Object.keys(commandPurposes) as CommandName[];
 
 const commandHelpOptions: Record<CommandName, string[]> = {
   doctor: [
+    "(no roots)                  Run a default read-only diagnosis of standard local app roots.",
     "--fixture <path>             Read a synthetic scannable fixture.",
     "--claude-root <path>         Diagnose an explicit Claude Code root.",
     "--codex-root <path>          Diagnose an explicit Codex root.",
@@ -58,12 +59,16 @@ const commandHelpOptions: Record<CommandName, string[]> = {
   ],
   import: [
     "--fixture <path>             Read a synthetic scannable fixture.",
+    "--claude-root <path>         Import portable candidates from an explicit Claude Code root.",
+    "--codex-root <path>          Import portable candidates from an explicit Codex root.",
     "--source-root <path>         Import portable candidates from an explicit live source root; repeatable.",
     "--repo <path>                Write the Agent Brain repo output to this destination.",
     "--json                      Render structured JSON output."
   ],
   plan: [
     "--fixture <path>             Read a synthetic scannable fixture.",
+    "--claude-root <path>         Preview adoption from an explicit Claude Code root.",
+    "--codex-root <path>          Preview adoption from an explicit Codex root.",
     "--source-root <path>         Preview adoption from an explicit live source root; repeatable.",
     "--json                      Render structured JSON output."
   ],
@@ -81,6 +86,7 @@ const commandHelpOptions: Record<CommandName, string[]> = {
     "--target-root <path>         New target root to materialize into.",
     "--adapter <claude-code|codex> Adapter used for target planning.",
     "--profile <id>               Profile to materialize; defaults to profile.default.",
+    "--confirm-fingerprint <sha>  Confirm the exact reviewed dry-run fingerprint before mutation.",
     "--json                      Render structured JSON output."
   ],
   verify: [
@@ -102,7 +108,8 @@ const commandHelpOptions: Record<CommandName, string[]> = {
 };
 
 export function createCli(options: CliOptions = {}) {
-  const fs = options.fs ?? { root: "/" };
+  const providedFs = options.fs;
+  const fs = providedFs ?? { root: "/" };
   const commands = { ...defaultCommands(), ...options.commands };
 
   return {
@@ -114,6 +121,14 @@ export function createCli(options: CliOptions = {}) {
         return {
           exitCode: 0,
           stdout: renderGeneralHelp(),
+          stderr: ""
+        };
+      }
+
+      if (rawCommand === "--version" || rawCommand === "-v") {
+        return {
+          exitCode: 0,
+          stdout: `${packageIdentity()}\n`,
           stderr: ""
         };
       }
@@ -152,7 +167,7 @@ export function createCli(options: CliOptions = {}) {
       const fixturePath = optionValue(args, "--fixture");
       const commandFs = fixturePath
         ? loadFixtureForCli(fixturePath)
-        : loadLiveRootsForCli(args) ?? { fs };
+        : loadLiveRootsForCli(args) ?? loadDefaultDiagnosisForCli(rawCommand, providedFs) ?? { fs };
       if ("error" in commandFs) {
         const report: Report = {
           ok: false,
@@ -195,6 +210,8 @@ function defaultCommands(): Record<CommandName, CommandHandler> {
 
 function renderGeneralHelp(): string {
   return [
+    packageIdentity(),
+    "",
     "agent-brain <command>",
     "",
     ...commandNames.map((name) => `  ${name.padEnd(16)} ${commandPurposes[name]}`)
@@ -300,6 +317,28 @@ function loadLiveRootsForCli(args: string[]): { fs: FsPort } | undefined {
       sourceRoots
     })
   };
+}
+
+function loadDefaultDiagnosisForCli(command: CommandName, providedFs: FsPort | undefined): { fs: FsPort } | undefined {
+  if (command !== "doctor" || providedFs) {
+    return undefined;
+  }
+
+  return {
+    fs: createDefaultDiagnosisScannableFsPort()
+  };
+}
+
+function packageIdentity(): string {
+  try {
+    const packageJson = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as {
+      name?: string;
+      version?: string;
+    };
+    return `${packageJson.name ?? "agent-brain"} ${packageJson.version ?? "0.0.0"}`;
+  } catch {
+    return "agent-brain 0.0.0";
+  }
 }
 
 function loadFixtureForCli(fixturePath: string):

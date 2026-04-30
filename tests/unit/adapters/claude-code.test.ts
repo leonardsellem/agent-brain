@@ -12,6 +12,10 @@ describe("Claude Code adapter", () => {
       classification: "portable-source",
       role: "personal-skill"
     });
+    expect(claudeCodeAdapter.classifyPath("skills/review/SKILL.md")).toMatchObject({
+      classification: "portable-source",
+      role: "personal-skill"
+    });
     expect(claudeCodeAdapter.classifyPath(".claude/agents/reviewer.md")).toMatchObject({
       classification: "portable-source",
       role: "project-subagent"

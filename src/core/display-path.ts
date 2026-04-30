@@ -12,5 +12,9 @@ export function toDisplayPath(candidatePath: string): string {
     return `~/${candidatePath.slice(home.length + 1)}`;
   }
 
+  if (candidatePath.includes(`${home}/`)) {
+    return candidatePath.split(`${home}/`).join("~/");
+  }
+
   return candidatePath;
 }
