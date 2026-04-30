@@ -1,5 +1,11 @@
 # @leonardsellem/agent-brain
 
+## 0.3.1
+
+### Patch Changes
+
+- Release guided setup autopilot and live setup hardening for npm users.
+
 ## 0.3.0
 
 ### Minor Changes
