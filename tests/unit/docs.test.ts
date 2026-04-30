@@ -130,6 +130,18 @@ const docs = [
       "## Safety Rules",
       "## Handoff Requirements"
     ]
+  },
+  {
+    path: "CONTRIBUTING.md",
+    headings: [
+      "## Welcome",
+      "## Project Promise",
+      "## Good First Contributions",
+      "## Development Setup",
+      "## Safety Rules",
+      "## Pull Request Checklist",
+      "## Release and Security Boundaries"
+    ]
   }
 ];
 

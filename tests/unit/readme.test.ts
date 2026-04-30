@@ -14,6 +14,7 @@ describe("README", () => {
       "## What It Manages",
       "## Command Surface",
       "## Safety Model",
+      "## Contributing",
       "## Development",
       "## Roadmap"
     ]) {
@@ -92,5 +93,16 @@ describe("README", () => {
     expect(protocolLinkIndex).toBeGreaterThan(-1);
     expect(protocolLinkIndex).toBeGreaterThan(disposableGuidanceIndex);
     expect(readme).not.toContain("agent-brain apply --repo ~/.agent-brain");
+  });
+
+  it("welcomes contributors through the dedicated contributing guide", () => {
+    const readme = readFileSync(readmePath, "utf8");
+    const contributingIndex = readme.indexOf("## Contributing");
+    const developmentIndex = readme.indexOf("## Development");
+
+    expect(readme).toContain("[Contributing guide](CONTRIBUTING.md)");
+    expect(contributingIndex).toBeGreaterThan(-1);
+    expect(developmentIndex).toBeGreaterThan(-1);
+    expect(contributingIndex).toBeLessThan(developmentIndex);
   });
 });
