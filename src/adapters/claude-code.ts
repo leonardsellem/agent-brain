@@ -24,8 +24,8 @@ export const claudeCodeAdapter: TargetAdapter = {
       [/^agents\/.+\.md$/, role("portable-source", "user-subagent", 0.9)],
       [/^\.mcp\.json$/, role("portable-source", "project-mcp", 0.85)],
       [/^~\/\.claude\.json$/, role("secret", "user-mcp-and-session-state", 0.9)],
-      [/^~\/\.claude\/(cache|logs|statsig|shell-snapshots)\//, role("runtime-cache", "runtime", 0.95)],
-      [/^(cache|logs|statsig|shell-snapshots)\//, role("runtime-cache", "runtime", 0.95)]
+      [/^~\/\.claude\/(cache|logs|statsig|shell-snapshots)(\/|$)/, role("runtime-cache", "runtime", 0.95)],
+      [/^(cache|logs|statsig|shell-snapshots)(\/|$)/, role("runtime-cache", "runtime", 0.95)]
     ]);
   },
 

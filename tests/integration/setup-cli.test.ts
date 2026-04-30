@@ -71,6 +71,7 @@ describe("setup CLI", () => {
     const setup = runCli(["setup", "--json"], { HOME: home });
     const report = JSON.parse(setup.stdout);
     const discovery = report.findings.find((finding: { id: string }) => finding.id === "setup.discovery");
+    const summary = report.findings.find((finding: { id: string }) => finding.id === "setup.classification-summary");
 
     expect(setup.status).toBe(0);
     expect(discovery).toMatchObject({
@@ -107,6 +108,26 @@ describe("setup CLI", () => {
     });
     expect(JSON.stringify(report)).not.toContain(home);
     expect(JSON.stringify(report)).not.toContain("large-plugin/SKILL.md");
+    expect(summary).toMatchObject({
+      message: expect.stringContaining("portable candidates"),
+      provenance: {
+        counts: expect.objectContaining({
+          portableCandidates: expect.any(Number),
+          defaultExclusions: expect.any(Number),
+          unknownReviewItems: expect.any(Number)
+        }),
+        defaultExclusions: expect.arrayContaining([
+          expect.objectContaining({
+            path: "~/.codex/auth.json",
+            classification: "secret"
+          }),
+          expect.objectContaining({
+            path: "~/.codex/plugins/cache",
+            classification: "runtime-cache"
+          })
+        ])
+      }
+    });
     expect(readFileSync(claudeSkill, "utf8")).toBe(beforeClaudeSkill);
     expect(readFileSync(agentsSkill, "utf8")).toBe(beforeAgentsSkill);
     expect(existsSync(path.join(home, ".agent-brain"))).toBe(false);
