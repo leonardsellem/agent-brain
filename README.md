@@ -8,6 +8,8 @@ It is for the moment when your Claude Code and Codex setup works, but you can no
 
 Agent Brain turns that pile of agent app state into portable intent: packages, profiles, provenance, exclusions, adapter targets, and rollback-aware materialization. The core promise is simple: explain the setup first, make it portable second, mutate it only after safety gates.
 
+![Agent Brain turns messy live agent folders into portable intent](docs/diagrams/agent-brain-usp.svg)
+
 ## Why Agent Brain
 
 AI coding agents are becoming programmable work environments. A serious setup is no longer one config file; it is a mix of human-authored capabilities, app-native state, generated target output, runtime history, auth material, machine-local assumptions, and foreign tool ownership.
@@ -40,21 +42,9 @@ The canonical model is deliberately smaller than an app home directory:
 
 Claude Code and Codex are the MVP adapters. Their layouts can diverge while still sharing Agent Brain's ownership vocabulary.
 
-## Visual Overview
+![Agent Brain canonical model and adapter boundary](docs/diagrams/agent-brain-canonical-model.svg)
 
-The diagrams below use the same dark, SVG-based architecture-diagram style as the `/architecture-diagram-generator` skill examples, with content grounded in the current TypeScript CLI structure and the Agent Brain project model. Open the [standalone diagram gallery](docs/diagrams/agent-brain-diagrams.html) for a larger view.
-
-### Product Model
-
-![Agent Brain product model](docs/diagrams/agent-brain-product-model.svg)
-
-### Safe Live Apply Transaction
-
-![Agent Brain safe live apply transaction](docs/diagrams/agent-brain-safe-apply.svg)
-
-### Current Implementation Modules
-
-![Agent Brain implementation module architecture](docs/diagrams/agent-brain-implementation.svg)
+Open the [standalone diagram gallery](docs/diagrams/agent-brain-diagrams.html) for larger versions of the README diagrams.
 
 ## Ownership Vocabulary
 
@@ -99,6 +89,8 @@ All commands support text output by default and structured output with `--json` 
 
 The current implementation supports both a fixture-backed rehearsal path and an explicit live path for disposable or user-approved roots. Live commands require explicit roots, adapter/profile selection, a dry-run fingerprint, a baseline snapshot, a materialization lock, verify, rollback, and bootstrap evidence before the target is considered healthy.
 
+![Agent Brain command journey for diagnosis, import, planning, apply, verification, rollback, bootstrap, and conflict explanation](docs/diagrams/agent-brain-command-journey.svg)
+
 ## Safety Model
 
 Live target mutation is treated as a transaction:
@@ -112,6 +104,8 @@ Live target mutation is treated as a transaction:
 7. Write a materialization lock.
 8. Verify target state.
 9. Keep rollback metadata.
+
+![Agent Brain guarded live apply safety model](docs/diagrams/agent-brain-live-safety.svg)
 
 Runtime state, caches, auth material, secret-like content, and machine-local overrides are excluded from canonical source by default.
 

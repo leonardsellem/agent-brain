@@ -1,16 +1,38 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Agent Brain Architecture Diagrams</title>
-<style>
-body{margin:0;background:#020617;color:#e2e8f0;font-family:JetBrains Mono,Consolas,monospace;padding:32px}
-main{max-width:1200px;margin:auto}section{margin:0 0 32px}svg{width:100%;height:auto;display:block;border:1px solid #1e293b;border-radius:14px}h1{font-size:24px}
-</style></head><body><main><h1>Agent Brain Architecture Diagrams</h1>
-<section><svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img">
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agent Brain README Diagrams</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body{margin:0;background:#020617;color:#e2e8f0;font-family:'JetBrains Mono',Consolas,monospace;padding:32px}
+    main{max-width:1200px;margin:auto}
+    header{margin-bottom:28px}
+    h1{font-size:24px;margin:0 0 8px}
+    p{color:#94a3b8;margin:0}
+    section{margin:0 0 34px}
+    h2{font-size:15px;margin:0 0 10px;color:#f8fafc}
+    svg{width:100%;height:auto;display:block;border:1px solid #1e293b;border-radius:14px}
+    footer{color:#64748b;font-size:11px;margin-top:16px}
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Agent Brain README Diagrams</h1>
+    <p>Architecture-diagram style visuals for product understanding, command flow, and live safety.</p>
+  </header>
+  <section>
+    <h2>From Folder Soup to Portable Intent</h2>
+    <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+
 <defs>
-  <pattern id="grid" width="44" height="44" patternUnits="userSpaceOnUse">
-    <path class="grid" d="M 44 0 L 0 0 0 44" fill="none"/>
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
   </pattern>
   <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-    <feGaussianBlur stdDeviation="2.4" result="blur"/>
+    <feGaussianBlur stdDeviation="2.2" result="blur"/>
     <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
   </filter>
   <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
@@ -20,85 +42,122 @@ main{max-width:1200px;margin:auto}section{margin:0 0 32px}svg{width:100%;height:
     <polygon points="0 0, 10 3.5, 0 7" fill="#fb7185"/>
   </marker>
   <style>
-  .bg { fill: #020617; }
-  .grid { stroke: #1e293b; stroke-width: .55; opacity: .65; }
-  .card { fill: #0f172a; stroke: #1e293b; stroke-width: 1.3; }
-  .boundary { fill: rgba(15,23,42,.35); stroke: #fbbf24; stroke-width: 1.4; stroke-dasharray: 8 5; }
-  .security { fill: rgba(136,19,55,.12); stroke: #fb7185; stroke-width: 1.25; stroke-dasharray: 5 5; }
-  text { font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace; }
-  .title { fill: #f8fafc; font-size: 24px; font-weight: 700; }
-  .subtitle { fill: #94a3b8; font-size: 13px; }
-  .label { fill: #f8fafc; font-size: 13px; font-weight: 700; }
-  .sub { fill: #94a3b8; font-size: 10px; }
-  .tiny { fill: #94a3b8; font-size: 8px; }
-  .arrow { stroke: #64748b; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
-  .arrow2 { stroke: #fb7185; stroke-width: 1.7; fill: none; stroke-dasharray: 5 4; marker-end: url(#rosehead); }
-  .frontend { fill: rgba(8,51,68,.45); stroke: #22d3ee; }
-  .backend { fill: rgba(6,78,59,.45); stroke: #34d399; }
-  .database { fill: rgba(76,29,149,.45); stroke: #a78bfa; }
-  .cloud { fill: rgba(120,53,15,.32); stroke: #fbbf24; }
-  .securityFill { fill: rgba(136,19,55,.38); stroke: #fb7185; }
-  .bus { fill: rgba(251,146,60,.28); stroke: #fb923c; }
-  .external { fill: rgba(30,41,59,.62); stroke: #94a3b8; }
-  .box { stroke-width: 1.8; rx: 8; }
-</style>
+    text { font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace; }
+    .bg { fill: #020617; }
+    .panel { fill: #0f172a; stroke: #1e293b; stroke-width: 1.5; }
+    .gridPanel { fill: url(#grid); opacity: .78; }
+    .title { fill: #f8fafc; font-size: 24px; font-weight: 700; }
+    .subtitle { fill: #94a3b8; font-size: 13px; }
+    .label { fill: #f8fafc; font-size: 13px; font-weight: 700; }
+    .smallLabel { fill: #f8fafc; font-size: 11px; font-weight: 700; }
+    .sub { fill: #94a3b8; font-size: 10px; }
+    .tiny { fill: #94a3b8; font-size: 8px; }
+    .muted { fill: #64748b; font-size: 9px; }
+    .arrow { stroke: #64748b; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    .safeArrow { stroke: #34d399; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    .riskArrow { stroke: #fb7185; stroke-width: 1.8; fill: none; stroke-dasharray: 5 4; marker-end: url(#rosehead); }
+    .frontend { fill: rgba(8,51,68,.45); stroke: #22d3ee; }
+    .backend { fill: rgba(6,78,59,.45); stroke: #34d399; }
+    .database { fill: rgba(76,29,149,.45); stroke: #a78bfa; }
+    .cloud { fill: rgba(120,53,15,.32); stroke: #fbbf24; }
+    .securityFill { fill: rgba(136,19,55,.38); stroke: #fb7185; }
+    .bus { fill: rgba(251,146,60,.28); stroke: #fb923c; }
+    .external { fill: rgba(30,41,59,.62); stroke: #94a3b8; }
+    .box { stroke-width: 1.8; }
+    .boundary { fill: rgba(15,23,42,.35); stroke: #fbbf24; stroke-width: 1.4; stroke-dasharray: 8 5; }
+    .safety { fill: rgba(136,19,55,.12); stroke: #fb7185; stroke-width: 1.35; stroke-dasharray: 5 5; }
+    .chipText { fill: #e2e8f0; font-size: 9px; font-weight: 600; }
+  </style>
 </defs>
+<title id="title">From Folder Soup to Portable Intent</title>
+<desc id="desc">Agent Brain explains what owns each artifact before anything is adopted or applied</desc>
 <rect width="1200" height="760" class="bg"/>
-<rect x="80" y="112" width="1040" height="470" rx="14" class="card"/>
-<rect x="104" y="136" width="992" height="398" fill="url(#grid)" opacity=".9"/>
-<circle cx="88" cy="44" r="6" fill="#22d3ee" filter="url(#glow)"/>
-<text x="108" y="50" class="title">Agent Brain Product Model</text>
-<text x="108" y="78" class="subtitle">Portable capability intent, not a dotfiles mirror</text>
-<path class="arrow" d="M 238 338 H 348"/><text x="293" y="326" text-anchor="middle" class="tiny">scan</text>
-<path class="arrow" d="M 516 338 H 626"/><text x="571" y="326" text-anchor="middle" class="tiny">adopt</text>
-<path class="arrow" d="M 794 338 H 904"/><text x="849" y="326" text-anchor="middle" class="tiny">materialize</text>
-<path class="arrow2" d="M 432 412 C 432 490, 720 490, 720 412"/><text x="576" y="503" text-anchor="middle" class="tiny">semantic conflict explanation</text>
-<rect x="126" y="285" width="112" height="106" rx="8" fill="#0f172a"/>
-<rect x="126" y="285" width="112" height="106" rx="8" class="box external"/>
-<text x="182.0" y="311" text-anchor="middle" class="label">Import Sources</text>
-<text x="182.0" y="333" text-anchor="middle" class="sub">dotstate / chezmoi</text>
-<text x="182.0" y="348" text-anchor="middle" class="sub">stow / home dirs</text><rect x="348" y="272" width="168" height="132" rx="8" fill="#0f172a"/>
-<rect x="348" y="272" width="168" height="132" rx="8" class="box backend"/>
-<text x="432.0" y="298" text-anchor="middle" class="label">Ownership Classifier</text>
-<text x="432.0" y="320" text-anchor="middle" class="sub">portable / generated</text>
-<text x="432.0" y="335" text-anchor="middle" class="sub">native / runtime</text>
-<text x="432.0" y="350" text-anchor="middle" class="sub">secret / unknown</text><rect x="626" y="260" width="168" height="156" rx="8" fill="#0f172a"/>
-<rect x="626" y="260" width="168" height="156" rx="8" class="box database"/>
-<text x="710.0" y="286" text-anchor="middle" class="label">Agent Brain Repo</text>
-<text x="710.0" y="308" text-anchor="middle" class="sub">packages</text>
-<text x="710.0" y="323" text-anchor="middle" class="sub">profiles</text>
-<text x="710.0" y="338" text-anchor="middle" class="sub">provenance + exclusions</text><rect x="904" y="282" width="136" height="112" rx="8" fill="#0f172a"/>
-<rect x="904" y="282" width="136" height="112" rx="8" class="box frontend"/>
-<text x="972.0" y="308" text-anchor="middle" class="label">App Targets</text>
-<text x="972.0" y="330" text-anchor="middle" class="sub">Claude Code</text>
-<text x="972.0" y="345" text-anchor="middle" class="sub">Codex</text>
-<rect x="596" y="238" width="226" height="204" rx="12" class="boundary"/>
-<text x="709" y="232" text-anchor="middle" fill="#fbbf24" font-size="10" font-family="JetBrains Mono, monospace">canonical source of truth</text>
-<rect x="80" y="620" width="330" height="120" rx="10" class="card"/>
-<circle cx="102" cy="649" r="4" fill="#22d3ee" filter="url(#glow)"/>
-<text x="116" y="654" class="label">Import carefully</text>
-<text x="102" y="680" class="sub">• Start from existing messy local reality</text>
-<text x="102" y="697" class="sub">• Classify before adopting anything</text>
-<text x="102" y="714" class="sub">• Keep secrets and runtime out by default</text><rect x="435" y="620" width="330" height="120" rx="10" class="card"/>
-<circle cx="457" cy="649" r="4" fill="#34d399" filter="url(#glow)"/>
-<text x="471" y="654" class="label">Keep intent portable</text>
-<text x="457" y="680" class="sub">• Packages and profiles are durable</text>
-<text x="457" y="697" class="sub">• Adapters preserve app-specific semantics</text>
-<text x="457" y="714" class="sub">• Locks map intent to generated targets</text><rect x="790" y="620" width="330" height="120" rx="10" class="card"/>
-<circle cx="812" cy="649" r="4" fill="#a78bfa" filter="url(#glow)"/>
-<text x="826" y="654" class="label">Explain conflicts</text>
-<text x="812" y="680" class="sub">• Resolve by ownership category</text>
-<text x="812" y="697" class="sub">• Avoid generic dotfile merge guesses</text>
-<text x="812" y="714" class="sub">• Bootstrap second machines cleanly</text><text x="600" y="742" text-anchor="middle" class="tiny">Agent Brain • product model overview</text>
+<rect x="70" y="104" width="1060" height="492" rx="14" class="panel"/>
+<rect x="94" y="128" width="1012" height="444" rx="10" class="gridPanel"/>
+<circle cx="84" cy="44" r="6" fill="#22d3ee" filter="url(#glow)"/>
+<text x="104" y="50" class="title">From Folder Soup to Portable Intent</text>
+<text x="104" y="78" class="subtitle">Agent Brain explains what owns each artifact before anything is adopted or applied</text>
+
+<path class="arrow" d="M 342 338 H 438"/><text x="390" y="321" class="tiny" text-anchor="middle">doctor scan</text>
+<path class="arrow" d="M 680 338 H 776"/><text x="728" y="321" class="tiny" text-anchor="middle">adopt intent</text>
+<path class="safeArrow" d="M 918 420 C 918 488 558 488 558 420"/><text x="738" y="506" class="tiny" text-anchor="middle">conflicts explained by ownership, not raw path diffs</text>
+
+<rect x="108" y="160" width="246" height="338" rx="12" class="safety"/>
+<text x="231" y="184" text-anchor="middle" fill="#fb7185" font-size="11" font-weight="700">messy live reality</text>
+<rect x="130" y="210" width="202" height="62" rx="6" fill="#0f172a"/>
+<rect x="130" y="210" width="202" height="62" rx="6" class="box external"/>
+<text x="231" y="230" text-anchor="middle" class="smallLabel">.claude</text>
+<text x="231" y="248" text-anchor="middle" class="sub">skills + plugins</text>
+<text x="231" y="262" text-anchor="middle" class="sub">auth + cache</text>
+<rect x="130" y="292" width="202" height="62" rx="6" fill="#0f172a"/>
+<rect x="130" y="292" width="202" height="62" rx="6" class="box external"/>
+<text x="231" y="312" text-anchor="middle" class="smallLabel">.codex</text>
+<text x="231" y="330" text-anchor="middle" class="sub">profiles + AGENTS.md</text>
+<text x="231" y="344" text-anchor="middle" class="sub">history + runtime</text>
+<rect x="130" y="374" width="202" height="62" rx="6" fill="#0f172a"/>
+<rect x="130" y="374" width="202" height="62" rx="6" class="box external"/>
+<text x="231" y="394" text-anchor="middle" class="smallLabel">dotstate / dotfiles</text>
+<text x="231" y="412" text-anchor="middle" class="sub">symlinks + overrides</text>
+<text x="231" y="426" text-anchor="middle" class="sub">foreign tool state</text>
+
+<rect x="438" y="240" width="242" height="196" rx="8" fill="#0f172a"/>
+<rect x="438" y="240" width="242" height="196" rx="8" class="box backend"/>
+<text x="559" y="265" text-anchor="middle" class="label">Ownership Classifier</text>
+<text x="559" y="287" text-anchor="middle" class="sub">portable-source</text>
+<text x="559" y="302" text-anchor="middle" class="sub">generated-target</text>
+<text x="559" y="317" text-anchor="middle" class="sub">native-owned</text>
+<text x="559" y="332" text-anchor="middle" class="sub">runtime-cache</text>
+<text x="559" y="347" text-anchor="middle" class="sub">machine-local</text>
+<text x="559" y="362" text-anchor="middle" class="sub">secret / unknown</text>
+<rect x="462" y="458" width="92" height="24" rx="12" class="backend" stroke-width="1.2"/>
+<text x="508" y="474" text-anchor="middle" class="chipText">adopt</text>
+<rect x="564" y="458" width="92" height="24" rx="12" class="securityFill" stroke-width="1.2"/>
+<text x="610" y="474" text-anchor="middle" class="chipText">exclude</text>
+
+<rect x="776" y="222" width="252" height="108" rx="8" fill="#0f172a"/>
+<rect x="776" y="222" width="252" height="108" rx="8" class="box database"/>
+<text x="902" y="247" text-anchor="middle" class="label">Agent Brain Repo</text>
+<text x="902" y="269" text-anchor="middle" class="sub">packages + profiles</text>
+<text x="902" y="284" text-anchor="middle" class="sub">provenance + exclusions</text>
+<text x="902" y="299" text-anchor="middle" class="sub">materialization locks</text>
+<rect x="776" y="372" width="252" height="92" rx="8" fill="#0f172a"/>
+<rect x="776" y="372" width="252" height="92" rx="8" class="box frontend"/>
+<text x="902" y="397" text-anchor="middle" class="label">App Targets</text>
+<text x="902" y="419" text-anchor="middle" class="sub">Claude Code adapter</text>
+<text x="902" y="434" text-anchor="middle" class="sub">Codex adapter</text>
+
+<rect x="80" y="622" width="330" height="116" rx="10" class="panel"/>
+<circle cx="102" cy="652" r="4" fill="#22d3ee" filter="url(#glow)"/>
+<text x="116" y="657" class="label">Not Dotfiles 2.0</text>
+<text x="102" y="684" class="sub">- dotfiles remain import sources</text>
+<text x="102" y="701" class="sub">- the durable unit is capability intent</text>
+<text x="102" y="718" class="sub">- app homes are materialization targets</text>
+<rect x="435" y="622" width="330" height="116" rx="10" class="panel"/>
+<circle cx="457" cy="652" r="4" fill="#34d399" filter="url(#glow)"/>
+<text x="471" y="657" class="label">USP</text>
+<text x="457" y="684" class="sub">- explainability before portability</text>
+<text x="457" y="701" class="sub">- guarded mutation after evidence</text>
+<text x="457" y="718" class="sub">- semantic conflicts instead of merge guesses</text>
+<rect x="790" y="622" width="330" height="116" rx="10" class="panel"/>
+<circle cx="812" cy="652" r="4" fill="#a78bfa" filter="url(#glow)"/>
+<text x="826" y="657" class="label">Primary Persona</text>
+<text x="812" y="684" class="sub">- power user with useful messy setup</text>
+<text x="812" y="701" class="sub">- wants machine portability</text>
+<text x="812" y="718" class="sub">- refuses blanket sync risk</text>
+<text x="600" y="744" text-anchor="middle" class="tiny">Agent Brain - product wedge and user pain</text>
 </svg>
-</section>
-<section><svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img">
+
+  </section>
+  <section>
+    <h2>Canonical Model and Adapter Boundary</h2>
+    <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+
 <defs>
-  <pattern id="grid" width="44" height="44" patternUnits="userSpaceOnUse">
-    <path class="grid" d="M 44 0 L 0 0 0 44" fill="none"/>
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
   </pattern>
   <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-    <feGaussianBlur stdDeviation="2.4" result="blur"/>
+    <feGaussianBlur stdDeviation="2.2" result="blur"/>
     <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
   </filter>
   <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
@@ -108,87 +167,131 @@ main{max-width:1200px;margin:auto}section{margin:0 0 32px}svg{width:100%;height:
     <polygon points="0 0, 10 3.5, 0 7" fill="#fb7185"/>
   </marker>
   <style>
-  .bg { fill: #020617; }
-  .grid { stroke: #1e293b; stroke-width: .55; opacity: .65; }
-  .card { fill: #0f172a; stroke: #1e293b; stroke-width: 1.3; }
-  .boundary { fill: rgba(15,23,42,.35); stroke: #fbbf24; stroke-width: 1.4; stroke-dasharray: 8 5; }
-  .security { fill: rgba(136,19,55,.12); stroke: #fb7185; stroke-width: 1.25; stroke-dasharray: 5 5; }
-  text { font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace; }
-  .title { fill: #f8fafc; font-size: 24px; font-weight: 700; }
-  .subtitle { fill: #94a3b8; font-size: 13px; }
-  .label { fill: #f8fafc; font-size: 13px; font-weight: 700; }
-  .sub { fill: #94a3b8; font-size: 10px; }
-  .tiny { fill: #94a3b8; font-size: 8px; }
-  .arrow { stroke: #64748b; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
-  .arrow2 { stroke: #fb7185; stroke-width: 1.7; fill: none; stroke-dasharray: 5 4; marker-end: url(#rosehead); }
-  .frontend { fill: rgba(8,51,68,.45); stroke: #22d3ee; }
-  .backend { fill: rgba(6,78,59,.45); stroke: #34d399; }
-  .database { fill: rgba(76,29,149,.45); stroke: #a78bfa; }
-  .cloud { fill: rgba(120,53,15,.32); stroke: #fbbf24; }
-  .securityFill { fill: rgba(136,19,55,.38); stroke: #fb7185; }
-  .bus { fill: rgba(251,146,60,.28); stroke: #fb923c; }
-  .external { fill: rgba(30,41,59,.62); stroke: #94a3b8; }
-  .box { stroke-width: 1.8; rx: 8; }
-</style>
+    text { font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace; }
+    .bg { fill: #020617; }
+    .panel { fill: #0f172a; stroke: #1e293b; stroke-width: 1.5; }
+    .gridPanel { fill: url(#grid); opacity: .78; }
+    .title { fill: #f8fafc; font-size: 24px; font-weight: 700; }
+    .subtitle { fill: #94a3b8; font-size: 13px; }
+    .label { fill: #f8fafc; font-size: 13px; font-weight: 700; }
+    .smallLabel { fill: #f8fafc; font-size: 11px; font-weight: 700; }
+    .sub { fill: #94a3b8; font-size: 10px; }
+    .tiny { fill: #94a3b8; font-size: 8px; }
+    .muted { fill: #64748b; font-size: 9px; }
+    .arrow { stroke: #64748b; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    .safeArrow { stroke: #34d399; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    .riskArrow { stroke: #fb7185; stroke-width: 1.8; fill: none; stroke-dasharray: 5 4; marker-end: url(#rosehead); }
+    .frontend { fill: rgba(8,51,68,.45); stroke: #22d3ee; }
+    .backend { fill: rgba(6,78,59,.45); stroke: #34d399; }
+    .database { fill: rgba(76,29,149,.45); stroke: #a78bfa; }
+    .cloud { fill: rgba(120,53,15,.32); stroke: #fbbf24; }
+    .securityFill { fill: rgba(136,19,55,.38); stroke: #fb7185; }
+    .bus { fill: rgba(251,146,60,.28); stroke: #fb923c; }
+    .external { fill: rgba(30,41,59,.62); stroke: #94a3b8; }
+    .box { stroke-width: 1.8; }
+    .boundary { fill: rgba(15,23,42,.35); stroke: #fbbf24; stroke-width: 1.4; stroke-dasharray: 8 5; }
+    .safety { fill: rgba(136,19,55,.12); stroke: #fb7185; stroke-width: 1.35; stroke-dasharray: 5 5; }
+    .chipText { fill: #e2e8f0; font-size: 9px; font-weight: 600; }
+  </style>
 </defs>
+<title id="title">Canonical Model and Adapter Boundary</title>
+<desc id="desc">Packages and profiles are portable; Claude Code and Codex stay app-specific targets</desc>
 <rect width="1200" height="760" class="bg"/>
-<rect x="80" y="112" width="1040" height="470" rx="14" class="card"/>
-<rect x="104" y="136" width="992" height="398" fill="url(#grid)" opacity=".9"/>
-<circle cx="88" cy="44" r="6" fill="#22d3ee" filter="url(#glow)"/>
-<text x="108" y="50" class="title">Safe Live Apply Transaction</text>
-<text x="108" y="78" class="subtitle">Dry-run fingerprint, snapshot, lock, verify, rollback</text>
-<path class="arrow" d="M 190 330 H 305"/><text x="247" y="318" text-anchor="middle" class="tiny">1. request</text>
-<path class="arrow" d="M 455 330 H 570"/><text x="512" y="318" text-anchor="middle" class="tiny">2. read intent</text>
-<path class="arrow" d="M 720 330 H 835"/><text x="777" y="318" text-anchor="middle" class="tiny">3. dry-run</text>
-<path class="arrow2" d="M 902 398 C 858 496, 364 496, 322 398"/><text x="612" y="510" text-anchor="middle" class="tiny">confirmed fingerprint unlocks mutation</text>
-<path class="arrow" d="M 902 250 C 902 205, 720 205, 720 250"/><text x="812" y="197" text-anchor="middle" class="tiny">snapshot before write</text>
-<rect x="118" y="286" width="72" height="88" rx="8" fill="#0f172a"/>
-<rect x="118" y="286" width="72" height="88" rx="8" class="box external"/>
-<text x="154.0" y="312" text-anchor="middle" class="label">User</text>
-<text x="154.0" y="334" text-anchor="middle" class="sub">approves</text>
-<text x="154.0" y="349" text-anchor="middle" class="sub">explicit roots</text><rect x="305" y="260" width="150" height="140" rx="8" fill="#0f172a"/>
-<rect x="305" y="260" width="150" height="140" rx="8" class="box backend"/>
-<text x="380.0" y="286" text-anchor="middle" class="label">agent-brain CLI</text>
-<text x="380.0" y="308" text-anchor="middle" class="sub">plan / apply</text>
-<text x="380.0" y="323" text-anchor="middle" class="sub">verify</text>
-<text x="380.0" y="338" text-anchor="middle" class="sub">rollback</text><rect x="570" y="264" width="150" height="132" rx="8" fill="#0f172a"/>
-<rect x="570" y="264" width="150" height="132" rx="8" class="box database"/>
-<text x="645.0" y="290" text-anchor="middle" class="label">Agent Brain Repo</text>
-<text x="645.0" y="312" text-anchor="middle" class="sub">packages</text>
-<text x="645.0" y="327" text-anchor="middle" class="sub">profiles</text>
-<text x="645.0" y="342" text-anchor="middle" class="sub">provenance</text><rect x="835" y="250" width="150" height="160" rx="8" fill="#0f172a"/>
-<rect x="835" y="250" width="150" height="160" rx="8" class="box frontend"/>
-<text x="910.0" y="276" text-anchor="middle" class="label">Target Root</text>
-<text x="910.0" y="298" text-anchor="middle" class="sub">Claude/Codex</text>
-<text x="910.0" y="313" text-anchor="middle" class="sub">generated paths</text>
-<text x="910.0" y="328" text-anchor="middle" class="sub">materialization lock</text>
-<rect x="286" y="238" width="720" height="202" rx="12" class="security"/>
-<text x="646" y="234" text-anchor="middle" fill="#fb7185" font-size="10" font-family="JetBrains Mono, monospace">live mutation boundary</text>
-<rect x="80" y="620" width="330" height="120" rx="10" class="card"/>
-<circle cx="102" cy="649" r="4" fill="#22d3ee" filter="url(#glow)"/>
-<text x="116" y="654" class="label">Before mutation</text>
-<text x="102" y="680" class="sub">• Explicit roots only</text>
-<text x="102" y="697" class="sub">• Exact dry-run operation set</text>
-<text x="102" y="714" class="sub">• Fingerprint must match</text><rect x="435" y="620" width="330" height="120" rx="10" class="card"/>
-<circle cx="457" cy="649" r="4" fill="#34d399" filter="url(#glow)"/>
-<text x="471" y="654" class="label">During apply</text>
-<text x="457" y="680" class="sub">• Capture baseline snapshot</text>
-<text x="457" y="697" class="sub">• Write only planned paths</text>
-<text x="457" y="714" class="sub">• Record materialization lock</text><rect x="790" y="620" width="330" height="120" rx="10" class="card"/>
-<circle cx="812" cy="649" r="4" fill="#a78bfa" filter="url(#glow)"/>
-<text x="826" y="654" class="label">After apply</text>
-<text x="812" y="680" class="sub">• Verify generated state</text>
-<text x="812" y="697" class="sub">• Report remaining risks</text>
-<text x="812" y="714" class="sub">• Keep rollback metadata</text><text x="600" y="742" text-anchor="middle" class="tiny">Agent Brain • safe apply flow</text>
+<rect x="70" y="104" width="1060" height="492" rx="14" class="panel"/>
+<rect x="94" y="128" width="1012" height="444" rx="10" class="gridPanel"/>
+<circle cx="84" cy="44" r="6" fill="#22d3ee" filter="url(#glow)"/>
+<text x="104" y="50" class="title">Canonical Model and Adapter Boundary</text>
+<text x="104" y="78" class="subtitle">Packages and profiles are portable; Claude Code and Codex stay app-specific targets</text>
+
+<path class="arrow" d="M 288 330 H 390"/><text x="339" y="313" class="tiny" text-anchor="middle">classify</text>
+<path class="arrow" d="M 390 410 H 288"/><text x="339" y="433" class="tiny" text-anchor="middle">exclusions report</text>
+<path class="arrow" d="M 650 330 H 782"/><text x="716" y="313" class="tiny" text-anchor="middle">materialize</text>
+<path class="safeArrow" d="M 908 430 C 908 520 520 520 520 446"/><text x="714" y="536" class="tiny" text-anchor="middle">bootstrap another machine from intent, not copied app homes</text>
+
+<rect x="112" y="198" width="176" height="266" rx="12" class="boundary"/>
+<text x="200" y="191" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="700">import sources</text>
+<rect x="132" y="224" width="136" height="54" rx="6" fill="#0f172a"/>
+<rect x="132" y="224" width="136" height="54" rx="6" class="box external"/>
+<text x="200" y="244" text-anchor="middle" class="smallLabel">dotstate</text>
+<text x="200" y="262" text-anchor="middle" class="sub">tracked files</text>
+<rect x="132" y="296" width="136" height="54" rx="6" fill="#0f172a"/>
+<rect x="132" y="296" width="136" height="54" rx="6" class="box external"/>
+<text x="200" y="316" text-anchor="middle" class="smallLabel">chezmoi / stow</text>
+<text x="200" y="334" text-anchor="middle" class="sub">managed paths</text>
+<rect x="132" y="368" width="136" height="54" rx="6" fill="#0f172a"/>
+<rect x="132" y="368" width="136" height="54" rx="6" class="box external"/>
+<text x="200" y="388" text-anchor="middle" class="smallLabel">home dirs</text>
+<text x="200" y="406" text-anchor="middle" class="sub">legacy reality</text>
+
+<rect x="390" y="184" width="260" height="292" rx="12" class="boundary"/>
+<text x="520" y="177" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="700">canonical source of truth</text>
+<rect x="418" y="214" width="204" height="46" rx="6" fill="#0f172a"/>
+<rect x="418" y="214" width="204" height="46" rx="6" class="box database"/>
+<text x="520" y="234" text-anchor="middle" class="smallLabel">packages</text>
+<text x="520" y="252" text-anchor="middle" class="sub">skills, prompts, MCP intent</text>
+<rect x="418" y="276" width="204" height="46" rx="6" fill="#0f172a"/>
+<rect x="418" y="276" width="204" height="46" rx="6" class="box database"/>
+<text x="520" y="296" text-anchor="middle" class="smallLabel">profiles</text>
+<text x="520" y="314" text-anchor="middle" class="sub">what applies together</text>
+<rect x="418" y="338" width="204" height="46" rx="6" fill="#0f172a"/>
+<rect x="418" y="338" width="204" height="46" rx="6" class="box database"/>
+<text x="520" y="358" text-anchor="middle" class="smallLabel">provenance</text>
+<text x="520" y="376" text-anchor="middle" class="sub">where it came from</text>
+<rect x="418" y="400" width="204" height="46" rx="6" fill="#0f172a"/>
+<rect x="418" y="400" width="204" height="46" rx="6" class="box database"/>
+<text x="520" y="420" text-anchor="middle" class="smallLabel">exclusions + locks</text>
+<text x="520" y="438" text-anchor="middle" class="sub">why not source, where generated</text>
+
+<rect x="782" y="198" width="298" height="266" rx="12" class="safety"/>
+<text x="931" y="191" text-anchor="middle" fill="#fb7185" font-size="10" font-weight="700">materialization targets</text>
+<rect x="806" y="232" width="116" height="70" rx="6" fill="#0f172a"/>
+<rect x="806" y="232" width="116" height="70" rx="6" class="box frontend"/>
+<text x="864" y="252" text-anchor="middle" class="smallLabel">Claude Code</text>
+<text x="864" y="270" text-anchor="middle" class="sub">skill layout</text>
+<text x="864" y="284" text-anchor="middle" class="sub">native state</text>
+<rect x="940" y="232" width="116" height="70" rx="6" fill="#0f172a"/>
+<rect x="940" y="232" width="116" height="70" rx="6" class="box frontend"/>
+<text x="998" y="252" text-anchor="middle" class="smallLabel">Codex</text>
+<text x="998" y="270" text-anchor="middle" class="sub">profiles</text>
+<text x="998" y="284" text-anchor="middle" class="sub">AGENTS.md</text>
+<rect x="806" y="338" width="250" height="70" rx="6" fill="#0f172a"/>
+<rect x="806" y="338" width="250" height="70" rx="6" class="box backend"/>
+<text x="931" y="358" text-anchor="middle" class="smallLabel">Target adapters</text>
+<text x="931" y="376" text-anchor="middle" class="sub">preserve app semantics</text>
+<text x="931" y="390" text-anchor="middle" class="sub">replaceable as layouts evolve</text>
+
+<rect x="80" y="622" width="330" height="116" rx="10" class="panel"/>
+<circle cx="102" cy="652" r="4" fill="#a78bfa" filter="url(#glow)"/>
+<text x="116" y="657" class="label">Portable</text>
+<text x="102" y="684" class="sub">- packages and profiles live in git</text>
+<text x="102" y="701" class="sub">- provenance explains adoption</text>
+<text x="102" y="718" class="sub">- locks connect intent to targets</text>
+<rect x="435" y="622" width="330" height="116" rx="10" class="panel"/>
+<circle cx="457" cy="652" r="4" fill="#fb7185" filter="url(#glow)"/>
+<text x="471" y="657" class="label">Excluded By Default</text>
+<text x="457" y="684" class="sub">- auth, tokens, session files</text>
+<text x="457" y="701" class="sub">- runtime history and caches</text>
+<text x="457" y="718" class="sub">- machine-local overrides</text>
+<rect x="790" y="622" width="330" height="116" rx="10" class="panel"/>
+<circle cx="812" cy="652" r="4" fill="#34d399" filter="url(#glow)"/>
+<text x="826" y="657" class="label">Durable</text>
+<text x="812" y="684" class="sub">- adapters can evolve</text>
+<text x="812" y="701" class="sub">- second machines bootstrap cleanly</text>
+<text x="812" y="718" class="sub">- no universal fake plugin format</text>
+<text x="600" y="744" text-anchor="middle" class="tiny">Agent Brain - canonical model</text>
 </svg>
-</section>
-<section><svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img">
+
+  </section>
+  <section>
+    <h2>Command Journey for a Cautious Power User</h2>
+    <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+
 <defs>
-  <pattern id="grid" width="44" height="44" patternUnits="userSpaceOnUse">
-    <path class="grid" d="M 44 0 L 0 0 0 44" fill="none"/>
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
   </pattern>
   <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-    <feGaussianBlur stdDeviation="2.4" result="blur"/>
+    <feGaussianBlur stdDeviation="2.2" result="blur"/>
     <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
   </filter>
   <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
@@ -198,96 +301,253 @@ main{max-width:1200px;margin:auto}section{margin:0 0 32px}svg{width:100%;height:
     <polygon points="0 0, 10 3.5, 0 7" fill="#fb7185"/>
   </marker>
   <style>
-  .bg { fill: #020617; }
-  .grid { stroke: #1e293b; stroke-width: .55; opacity: .65; }
-  .card { fill: #0f172a; stroke: #1e293b; stroke-width: 1.3; }
-  .boundary { fill: rgba(15,23,42,.35); stroke: #fbbf24; stroke-width: 1.4; stroke-dasharray: 8 5; }
-  .security { fill: rgba(136,19,55,.12); stroke: #fb7185; stroke-width: 1.25; stroke-dasharray: 5 5; }
-  text { font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace; }
-  .title { fill: #f8fafc; font-size: 24px; font-weight: 700; }
-  .subtitle { fill: #94a3b8; font-size: 13px; }
-  .label { fill: #f8fafc; font-size: 13px; font-weight: 700; }
-  .sub { fill: #94a3b8; font-size: 10px; }
-  .tiny { fill: #94a3b8; font-size: 8px; }
-  .arrow { stroke: #64748b; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
-  .arrow2 { stroke: #fb7185; stroke-width: 1.7; fill: none; stroke-dasharray: 5 4; marker-end: url(#rosehead); }
-  .frontend { fill: rgba(8,51,68,.45); stroke: #22d3ee; }
-  .backend { fill: rgba(6,78,59,.45); stroke: #34d399; }
-  .database { fill: rgba(76,29,149,.45); stroke: #a78bfa; }
-  .cloud { fill: rgba(120,53,15,.32); stroke: #fbbf24; }
-  .securityFill { fill: rgba(136,19,55,.38); stroke: #fb7185; }
-  .bus { fill: rgba(251,146,60,.28); stroke: #fb923c; }
-  .external { fill: rgba(30,41,59,.62); stroke: #94a3b8; }
-  .box { stroke-width: 1.8; rx: 8; }
-</style>
+    text { font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace; }
+    .bg { fill: #020617; }
+    .panel { fill: #0f172a; stroke: #1e293b; stroke-width: 1.5; }
+    .gridPanel { fill: url(#grid); opacity: .78; }
+    .title { fill: #f8fafc; font-size: 24px; font-weight: 700; }
+    .subtitle { fill: #94a3b8; font-size: 13px; }
+    .label { fill: #f8fafc; font-size: 13px; font-weight: 700; }
+    .smallLabel { fill: #f8fafc; font-size: 11px; font-weight: 700; }
+    .sub { fill: #94a3b8; font-size: 10px; }
+    .tiny { fill: #94a3b8; font-size: 8px; }
+    .muted { fill: #64748b; font-size: 9px; }
+    .arrow { stroke: #64748b; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    .safeArrow { stroke: #34d399; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    .riskArrow { stroke: #fb7185; stroke-width: 1.8; fill: none; stroke-dasharray: 5 4; marker-end: url(#rosehead); }
+    .frontend { fill: rgba(8,51,68,.45); stroke: #22d3ee; }
+    .backend { fill: rgba(6,78,59,.45); stroke: #34d399; }
+    .database { fill: rgba(76,29,149,.45); stroke: #a78bfa; }
+    .cloud { fill: rgba(120,53,15,.32); stroke: #fbbf24; }
+    .securityFill { fill: rgba(136,19,55,.38); stroke: #fb7185; }
+    .bus { fill: rgba(251,146,60,.28); stroke: #fb923c; }
+    .external { fill: rgba(30,41,59,.62); stroke: #94a3b8; }
+    .box { stroke-width: 1.8; }
+    .boundary { fill: rgba(15,23,42,.35); stroke: #fbbf24; stroke-width: 1.4; stroke-dasharray: 8 5; }
+    .safety { fill: rgba(136,19,55,.12); stroke: #fb7185; stroke-width: 1.35; stroke-dasharray: 5 5; }
+    .chipText { fill: #e2e8f0; font-size: 9px; font-weight: 600; }
+  </style>
 </defs>
+<title id="title">Command Journey for a Cautious Power User</title>
+<desc id="desc">Every command answers a trust question before the next command is safe</desc>
 <rect width="1200" height="760" class="bg"/>
-<rect x="80" y="112" width="1040" height="470" rx="14" class="card"/>
-<rect x="104" y="136" width="992" height="398" fill="url(#grid)" opacity=".9"/>
-<circle cx="88" cy="44" r="6" fill="#22d3ee" filter="url(#glow)"/>
-<text x="108" y="50" class="title">Agent Brain Implementation Architecture</text>
-<text x="108" y="78" class="subtitle">TypeScript CLI modules generated from current repository structure</text>
-<path class="arrow" d="M 218 238 H 330"/>
-<path class="arrow" d="M 480 238 H 582"/>
-<path class="arrow" d="M 480 318 H 582"/>
-<path class="arrow" d="M 480 398 H 582"/>
-<path class="arrow" d="M 750 238 H 858"/>
-<path class="arrow" d="M 750 318 H 858"/>
-<path class="arrow" d="M 750 398 H 858"/>
-<path class="arrow" d="M 654 472 V 518"/>
-<rect x="122" y="204" width="96" height="88" rx="8" fill="#0f172a"/>
-<rect x="122" y="204" width="96" height="88" rx="8" class="box external"/>
-<text x="170.0" y="230" text-anchor="middle" class="label">CLI</text>
-<text x="170.0" y="252" text-anchor="middle" class="sub">src/cli.ts</text>
-<text x="170.0" y="267" text-anchor="middle" class="sub">JSON/text</text><rect x="330" y="174" width="150" height="128" rx="8" fill="#0f172a"/>
-<rect x="330" y="174" width="150" height="128" rx="8" class="box backend"/>
-<text x="405.0" y="200" text-anchor="middle" class="label">Commands</text>
-<text x="405.0" y="222" text-anchor="middle" class="sub">doctor / import</text>
-<text x="405.0" y="237" text-anchor="middle" class="sub">apply / verify</text>
-<text x="405.0" y="252" text-anchor="middle" class="sub">rollback / bootstrap</text><rect x="330" y="344" width="150" height="104" rx="8" fill="#0f172a"/>
-<rect x="330" y="344" width="150" height="104" rx="8" class="box securityFill"/>
-<text x="405.0" y="370" text-anchor="middle" class="label">Conflict</text>
-<text x="405.0" y="392" text-anchor="middle" class="sub">explain-conflict</text>
-<text x="405.0" y="407" text-anchor="middle" class="sub">ownership advice</text><rect x="582" y="160" width="168" height="112" rx="8" fill="#0f172a"/>
-<rect x="582" y="160" width="168" height="112" rx="8" class="box database"/>
-<text x="666.0" y="186" text-anchor="middle" class="label">Core Model</text>
-<text x="666.0" y="208" text-anchor="middle" class="sub">classification</text>
-<text x="666.0" y="223" text-anchor="middle" class="sub">provenance</text>
-<text x="666.0" y="238" text-anchor="middle" class="sub">path safety</text><rect x="582" y="296" width="168" height="112" rx="8" fill="#0f172a"/>
-<rect x="582" y="296" width="168" height="112" rx="8" class="box backend"/>
-<text x="666.0" y="322" text-anchor="middle" class="label">Import + Apply</text>
-<text x="666.0" y="344" text-anchor="middle" class="sub">adoption plans</text>
-<text x="666.0" y="359" text-anchor="middle" class="sub">snapshots</text>
-<text x="666.0" y="374" text-anchor="middle" class="sub">target planner</text><rect x="858" y="174" width="150" height="116" rx="8" fill="#0f172a"/>
-<rect x="858" y="174" width="150" height="116" rx="8" class="box frontend"/>
-<text x="933.0" y="200" text-anchor="middle" class="label">Adapters</text>
-<text x="933.0" y="222" text-anchor="middle" class="sub">Claude Code</text>
-<text x="933.0" y="237" text-anchor="middle" class="sub">Codex</text><rect x="858" y="344" width="150" height="104" rx="8" fill="#0f172a"/>
-<rect x="858" y="344" width="150" height="104" rx="8" class="box external"/>
-<text x="933.0" y="370" text-anchor="middle" class="label">Ports</text>
-<text x="933.0" y="392" text-anchor="middle" class="sub">filesystem</text>
-<text x="933.0" y="407" text-anchor="middle" class="sub">git</text>
-<text x="933.0" y="422" text-anchor="middle" class="sub">fixtures</text>
-<rect x="552" y="134" width="486" height="338" rx="12" class="boundary"/>
-<text x="795" y="128" text-anchor="middle" fill="#fbbf24" font-size="10" font-family="JetBrains Mono, monospace">replaceable semantics behind ports</text>
-<rect x="584" y="518" width="140" height="24" rx="5" class="bus"/>
-<text x="654" y="535" text-anchor="middle" fill="#fb923c" font-size="8" font-family="JetBrains Mono, monospace">reporting/text + json</text>
-<rect x="80" y="620" width="330" height="120" rx="10" class="card"/>
-<circle cx="102" cy="649" r="4" fill="#22d3ee" filter="url(#glow)"/>
-<text x="116" y="654" class="label">Command surface</text>
-<text x="102" y="680" class="sub">• Thin CLI routing layer</text>
-<text x="102" y="697" class="sub">• Commands orchestrate product flows</text>
-<text x="102" y="714" class="sub">• Reports support humans and agents</text><rect x="435" y="620" width="330" height="120" rx="10" class="card"/>
-<circle cx="457" cy="649" r="4" fill="#34d399" filter="url(#glow)"/>
-<text x="471" y="654" class="label">Durable core</text>
-<text x="457" y="680" class="sub">• Shared ownership vocabulary</text>
-<text x="457" y="697" class="sub">• Provenance travels with imports</text>
-<text x="457" y="714" class="sub">• Safety checks live below commands</text><rect x="790" y="620" width="330" height="120" rx="10" class="card"/>
-<circle cx="812" cy="649" r="4" fill="#a78bfa" filter="url(#glow)"/>
-<text x="826" y="654" class="label">Adapter boundary</text>
-<text x="812" y="680" class="sub">• App layouts stay replaceable</text>
-<text x="812" y="697" class="sub">• Fixture-first tests isolate effects</text>
-<text x="812" y="714" class="sub">• Live roots require explicit flags</text><text x="600" y="742" text-anchor="middle" class="tiny">Agent Brain • implementation module map</text>
+<rect x="70" y="104" width="1060" height="492" rx="14" class="panel"/>
+<rect x="94" y="128" width="1012" height="444" rx="10" class="gridPanel"/>
+<circle cx="84" cy="44" r="6" fill="#22d3ee" filter="url(#glow)"/>
+<text x="104" y="50" class="title">Command Journey for a Cautious Power User</text>
+<text x="104" y="78" class="subtitle">Every command answers a trust question before the next command is safe</text>
+
+<path class="arrow" d="M 214 270 H 312"/>
+<path class="arrow" d="M 452 270 H 550"/>
+<path class="arrow" d="M 690 270 H 788"/>
+<path class="arrow" d="M 928 270 H 1026"/>
+<path class="safeArrow" d="M 600 344 V 420 H 214"/>
+<path class="safeArrow" d="M 600 344 V 420 H 452"/>
+<path class="safeArrow" d="M 600 344 V 420 H 690"/>
+<path class="riskArrow" d="M 452 344 C 452 478 928 478 928 344"/>
+
+<rect x="88" y="220" width="126" height="96" rx="6" fill="#0f172a"/>
+<rect x="88" y="220" width="126" height="96" rx="6" class="box backend"/>
+<text x="151" y="240" text-anchor="middle" class="smallLabel">doctor</text>
+<text x="151" y="258" text-anchor="middle" class="sub">What exists?</text>
+<text x="151" y="272" text-anchor="middle" class="sub">What is risky?</text>
+<rect x="312" y="220" width="140" height="96" rx="6" fill="#0f172a"/>
+<rect x="312" y="220" width="140" height="96" rx="6" class="box database"/>
+<text x="382" y="240" text-anchor="middle" class="smallLabel">import</text>
+<text x="382" y="258" text-anchor="middle" class="sub">What is portable?</text>
+<text x="382" y="272" text-anchor="middle" class="sub">What is excluded?</text>
+<rect x="550" y="220" width="140" height="96" rx="6" fill="#0f172a"/>
+<rect x="550" y="220" width="140" height="96" rx="6" class="box bus"/>
+<text x="620" y="240" text-anchor="middle" class="smallLabel">plan</text>
+<text x="620" y="258" text-anchor="middle" class="sub">What would change?</text>
+<text x="620" y="272" text-anchor="middle" class="sub">What is the hash?</text>
+<rect x="788" y="220" width="140" height="96" rx="6" fill="#0f172a"/>
+<rect x="788" y="220" width="140" height="96" rx="6" class="box securityFill"/>
+<text x="858" y="240" text-anchor="middle" class="smallLabel">apply</text>
+<text x="858" y="258" text-anchor="middle" class="sub">Confirm exact</text>
+<text x="858" y="272" text-anchor="middle" class="sub">fingerprint</text>
+<rect x="1026" y="220" width="96" height="96" rx="6" fill="#0f172a"/>
+<rect x="1026" y="220" width="96" height="96" rx="6" class="box frontend"/>
+<text x="1074" y="240" text-anchor="middle" class="smallLabel">verify</text>
+<text x="1074" y="258" text-anchor="middle" class="sub">Healthy?</text>
+<text x="1074" y="272" text-anchor="middle" class="sub">Drift?</text>
+
+<rect x="146" y="420" width="136" height="82" rx="6" fill="#0f172a"/>
+<rect x="146" y="420" width="136" height="82" rx="6" class="box external"/>
+<text x="214" y="440" text-anchor="middle" class="smallLabel">explain-conflict</text>
+<text x="214" y="458" text-anchor="middle" class="sub">What owns</text>
+<text x="214" y="472" text-anchor="middle" class="sub">this path?</text>
+<rect x="532" y="420" width="136" height="82" rx="6" fill="#0f172a"/>
+<rect x="532" y="420" width="136" height="82" rx="6" class="box frontend"/>
+<text x="600" y="440" text-anchor="middle" class="smallLabel">bootstrap</text>
+<text x="600" y="458" text-anchor="middle" class="sub">Second machine</text>
+<text x="600" y="472" text-anchor="middle" class="sub">from intent</text>
+<rect x="918" y="420" width="136" height="82" rx="6" fill="#0f172a"/>
+<rect x="918" y="420" width="136" height="82" rx="6" class="box securityFill"/>
+<text x="986" y="440" text-anchor="middle" class="smallLabel">rollback</text>
+<text x="986" y="458" text-anchor="middle" class="sub">Restore</text>
+<text x="986" y="472" text-anchor="middle" class="sub">snapshot</text>
+
+<text x="151" y="198" text-anchor="middle" class="tiny">read-only diagnosis</text>
+<text x="382" y="198" text-anchor="middle" class="tiny">repo creation</text>
+<text x="620" y="198" text-anchor="middle" class="tiny">review gate</text>
+<text x="858" y="198" text-anchor="middle" class="tiny">mutation gate</text>
+<text x="1074" y="198" text-anchor="middle" class="tiny">health gate</text>
+
+<rect x="80" y="622" width="330" height="116" rx="10" class="panel"/>
+<circle cx="102" cy="652" r="4" fill="#22d3ee" filter="url(#glow)"/>
+<text x="116" y="657" class="label">Trust Questions</text>
+<text x="102" y="684" class="sub">- what owns this file?</text>
+<text x="102" y="701" class="sub">- what will be written?</text>
+<text x="102" y="718" class="sub">- can I undo it?</text>
+<rect x="435" y="622" width="330" height="116" rx="10" class="panel"/>
+<circle cx="457" cy="652" r="4" fill="#34d399" filter="url(#glow)"/>
+<text x="471" y="657" class="label">Agent-Friendly</text>
+<text x="457" y="684" class="sub">- text output for humans</text>
+<text x="457" y="701" class="sub">- JSON output for agents</text>
+<text x="457" y="718" class="sub">- commands compose into protocols</text>
+<rect x="790" y="622" width="330" height="116" rx="10" class="panel"/>
+<circle cx="812" cy="652" r="4" fill="#a78bfa" filter="url(#glow)"/>
+<text x="826" y="657" class="label">Release Surface</text>
+<text x="812" y="684" class="sub">- npm install first</text>
+<text x="812" y="701" class="sub">- fixtures and disposable roots</text>
+<text x="812" y="718" class="sub">- explicit live roots when approved</text>
+<text x="600" y="744" text-anchor="middle" class="tiny">Agent Brain - CLI command map</text>
 </svg>
-</section>
-</main></body></html>
+
+  </section>
+  <section>
+    <h2>Guarded Live Apply on Real Configs</h2>
+    <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+
+<defs>
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.5"/>
+  </pattern>
+  <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur stdDeviation="2.2" result="blur"/>
+    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+  </marker>
+  <marker id="rosehead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+    <polygon points="0 0, 10 3.5, 0 7" fill="#fb7185"/>
+  </marker>
+  <style>
+    text { font-family: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace; }
+    .bg { fill: #020617; }
+    .panel { fill: #0f172a; stroke: #1e293b; stroke-width: 1.5; }
+    .gridPanel { fill: url(#grid); opacity: .78; }
+    .title { fill: #f8fafc; font-size: 24px; font-weight: 700; }
+    .subtitle { fill: #94a3b8; font-size: 13px; }
+    .label { fill: #f8fafc; font-size: 13px; font-weight: 700; }
+    .smallLabel { fill: #f8fafc; font-size: 11px; font-weight: 700; }
+    .sub { fill: #94a3b8; font-size: 10px; }
+    .tiny { fill: #94a3b8; font-size: 8px; }
+    .muted { fill: #64748b; font-size: 9px; }
+    .arrow { stroke: #64748b; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    .safeArrow { stroke: #34d399; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    .riskArrow { stroke: #fb7185; stroke-width: 1.8; fill: none; stroke-dasharray: 5 4; marker-end: url(#rosehead); }
+    .frontend { fill: rgba(8,51,68,.45); stroke: #22d3ee; }
+    .backend { fill: rgba(6,78,59,.45); stroke: #34d399; }
+    .database { fill: rgba(76,29,149,.45); stroke: #a78bfa; }
+    .cloud { fill: rgba(120,53,15,.32); stroke: #fbbf24; }
+    .securityFill { fill: rgba(136,19,55,.38); stroke: #fb7185; }
+    .bus { fill: rgba(251,146,60,.28); stroke: #fb923c; }
+    .external { fill: rgba(30,41,59,.62); stroke: #94a3b8; }
+    .box { stroke-width: 1.8; }
+    .boundary { fill: rgba(15,23,42,.35); stroke: #fbbf24; stroke-width: 1.4; stroke-dasharray: 8 5; }
+    .safety { fill: rgba(136,19,55,.12); stroke: #fb7185; stroke-width: 1.35; stroke-dasharray: 5 5; }
+    .chipText { fill: #e2e8f0; font-size: 9px; font-weight: 600; }
+  </style>
+</defs>
+<title id="title">Guarded Live Apply on Real Configs</title>
+<desc id="desc">Safe live use means explicit roots, exact fingerprints, snapshots, verification, and rollback</desc>
+<rect width="1200" height="760" class="bg"/>
+<rect x="70" y="104" width="1060" height="492" rx="14" class="panel"/>
+<rect x="94" y="128" width="1012" height="444" rx="10" class="gridPanel"/>
+<circle cx="84" cy="44" r="6" fill="#22d3ee" filter="url(#glow)"/>
+<text x="104" y="50" class="title">Guarded Live Apply on Real Configs</text>
+<text x="104" y="78" class="subtitle">Safe live use means explicit roots, exact fingerprints, snapshots, verification, and rollback</text>
+
+<path class="arrow" d="M 156 300 H 260"/>
+<path class="arrow" d="M 402 300 H 506"/>
+<path class="arrow" d="M 648 300 H 752"/>
+<path class="arrow" d="M 894 300 H 998"/>
+<path class="riskArrow" d="M 568 366 C 568 446 322 446 322 366"/><text x="445" y="462" text-anchor="middle" class="tiny">fingerprint drift cancels approval</text>
+<path class="safeArrow" d="M 814 366 C 814 490 568 490 568 366"/><text x="691" y="506" text-anchor="middle" class="tiny">snapshot makes rollback concrete</text>
+
+<rect x="100" y="176" width="980" height="318" rx="12" class="safety"/>
+<text x="590" y="169" text-anchor="middle" fill="#fb7185" font-size="10" font-weight="700">live mutation boundary: no write without matching evidence</text>
+
+<rect x="92" y="246" width="128" height="108" rx="6" fill="#0f172a"/>
+<rect x="92" y="246" width="128" height="108" rx="6" class="box external"/>
+<text x="156" y="266" text-anchor="middle" class="smallLabel">explicit roots</text>
+<text x="156" y="284" text-anchor="middle" class="sub">.codex</text>
+<text x="156" y="298" text-anchor="middle" class="sub">.claude</text>
+<text x="156" y="312" text-anchor="middle" class="sub">.dotstate</text>
+<rect x="260" y="246" width="142" height="108" rx="6" fill="#0f172a"/>
+<rect x="260" y="246" width="142" height="108" rx="6" class="box backend"/>
+<text x="331" y="266" text-anchor="middle" class="smallLabel">dry-run plan</text>
+<text x="331" y="284" text-anchor="middle" class="sub">create/update</text>
+<text x="331" y="298" text-anchor="middle" class="sub">move/symlink</text>
+<rect x="506" y="246" width="142" height="108" rx="6" fill="#0f172a"/>
+<rect x="506" y="246" width="142" height="108" rx="6" class="box bus"/>
+<text x="577" y="266" text-anchor="middle" class="smallLabel">fingerprint</text>
+<text x="577" y="284" text-anchor="middle" class="sub">exact operation</text>
+<text x="577" y="298" text-anchor="middle" class="sub">set hash</text>
+<rect x="752" y="246" width="142" height="108" rx="6" fill="#0f172a"/>
+<rect x="752" y="246" width="142" height="108" rx="6" class="box database"/>
+<text x="823" y="266" text-anchor="middle" class="smallLabel">baseline</text>
+<text x="823" y="284" text-anchor="middle" class="sub">snapshot before</text>
+<text x="823" y="298" text-anchor="middle" class="sub">any write</text>
+<rect x="998" y="246" width="82" height="108" rx="6" fill="#0f172a"/>
+<rect x="998" y="246" width="82" height="108" rx="6" class="box frontend"/>
+<text x="1039" y="266" text-anchor="middle" class="smallLabel">apply</text>
+<text x="1039" y="284" text-anchor="middle" class="sub">planned</text>
+<text x="1039" y="298" text-anchor="middle" class="sub">paths only</text>
+
+<rect x="260" y="408" width="142" height="62" rx="6" fill="#0f172a"/>
+<rect x="260" y="408" width="142" height="62" rx="6" class="box securityFill"/>
+<text x="331" y="428" text-anchor="middle" class="smallLabel">secret policy</text>
+<text x="331" y="446" text-anchor="middle" class="sub">exclude by default</text>
+<rect x="506" y="408" width="142" height="62" rx="6" fill="#0f172a"/>
+<rect x="506" y="408" width="142" height="62" rx="6" class="box database"/>
+<text x="577" y="428" text-anchor="middle" class="smallLabel">lock file</text>
+<text x="577" y="446" text-anchor="middle" class="sub">generated ownership</text>
+<rect x="752" y="408" width="142" height="62" rx="6" fill="#0f172a"/>
+<rect x="752" y="408" width="142" height="62" rx="6" class="box backend"/>
+<text x="823" y="428" text-anchor="middle" class="smallLabel">verify</text>
+<text x="823" y="446" text-anchor="middle" class="sub">drift + risks</text>
+<rect x="998" y="408" width="82" height="62" rx="6" fill="#0f172a"/>
+<rect x="998" y="408" width="82" height="62" rx="6" class="box securityFill"/>
+<text x="1039" y="428" text-anchor="middle" class="smallLabel">rollback</text>
+<text x="1039" y="446" text-anchor="middle" class="sub">restore</text>
+
+<rect x="80" y="622" width="330" height="116" rx="10" class="panel"/>
+<circle cx="102" cy="652" r="4" fill="#34d399" filter="url(#glow)"/>
+<text x="116" y="657" class="label">Safe To Run Means</text>
+<text x="102" y="684" class="sub">- user supplies live roots</text>
+<text x="102" y="701" class="sub">- dry-run reviewed before mutation</text>
+<text x="102" y="718" class="sub">- confirmation names exact fingerprint</text>
+<rect x="435" y="622" width="330" height="116" rx="10" class="panel"/>
+<circle cx="457" cy="652" r="4" fill="#fb7185" filter="url(#glow)"/>
+<text x="471" y="657" class="label">What Stays Out</text>
+<text x="457" y="684" class="sub">- auth and secret-like files</text>
+<text x="457" y="701" class="sub">- runtime caches and history</text>
+<text x="457" y="718" class="sub">- machine-local overrides</text>
+<rect x="790" y="622" width="330" height="116" rx="10" class="panel"/>
+<circle cx="812" cy="652" r="4" fill="#a78bfa" filter="url(#glow)"/>
+<text x="826" y="657" class="label">Evidence Afterward</text>
+<text x="812" y="684" class="sub">- materialization lock written</text>
+<text x="812" y="701" class="sub">- verify reports health</text>
+<text x="812" y="718" class="sub">- rollback metadata remains available</text>
+<text x="600" y="744" text-anchor="middle" class="tiny">Agent Brain - guarded live safety model</text>
+</svg>
+
+  </section>
+  <footer>Agent Brain - generated README diagram gallery</footer>
+</main>
+</body>
+</html>

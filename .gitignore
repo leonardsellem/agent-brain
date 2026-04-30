@@ -1,13 +1,27 @@
+# macOS
 .DS_Store
+
+# Dependencies
 node_modules/
+
+# Build output
 dist/
 coverage/
+
+# Environment and secrets
 .env
 .env.*
+
+# Local agent memory and run artifacts
 .brv/
 /artifacts/
-/plans/
 /tmp/
+
+# Local planning scratch space
+/plans/
 /docs/plans/
 /docs/brainstorms/
 /docs/solutions/
+
+# Local documentation tooling
+/scripts/generate-readme-diagrams.mjs
