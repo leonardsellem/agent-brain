@@ -1,7 +1,10 @@
 import os from "node:os";
 import path from "node:path";
+import { createApplyCommand } from "./apply.js";
+import { createVerifyCommand } from "./verify.js";
 import { toDisplayPath } from "../core/display-path.js";
 import { isScannableFsPort } from "../core/fs-port.js";
+import { createTargetBackup } from "../setup/backups.js";
 import { createSetupClassificationSummary } from "../setup/classification-summary.js";
 import { createSetupDiscovery } from "../setup/discovery.js";
 import { createSetupImportPlan, writeSetupImport } from "../setup/flow.js";
@@ -19,6 +22,10 @@ export function createSetupCommand(): CommandHandler {
     const repoDestination = explicitRepoDestination ?? path.join(os.homedir(), ".agent-brain");
     const previewRepoDestination = explicitRepoDestination ?? toDisplayPath(repoDestination);
     const importConfirmed = args.includes("--confirm-import");
+    const targetRoot = optionValue(args, "--target-root");
+    const adapter = optionValue(args, "--adapter");
+    const profile = optionValue(args, "--profile") ?? "profile.default";
+    const confirmationFingerprint = optionValue(args, "--confirm-fingerprint");
     const findings: Finding[] = [
       {
         id: "setup.confirmation-required",
@@ -92,6 +99,66 @@ export function createSetupCommand(): CommandHandler {
           path: writtenPath,
           message: `Wrote ${writtenPath}`
         })));
+
+        if (targetRoot && adapter) {
+          const backup = createTargetBackup({
+            repoDestination,
+            targetRoot
+          });
+          findings.push({
+            id: "setup.backup-created",
+            severity: "info",
+            category: "generated-target",
+            path: targetRoot,
+            message: "Backed up selected target root before live rewrite confirmation.",
+            provenance: {
+              backupPath: backup.backupPath
+            }
+          });
+
+          const applyArgs = [
+            "--repo",
+            repoDestination,
+            "--target-root",
+            targetRoot,
+            "--adapter",
+            adapter,
+            "--profile",
+            profile
+          ];
+          if (confirmationFingerprint) {
+            applyArgs.push("--confirm-fingerprint", confirmationFingerprint);
+          }
+
+          const applyReport = awaitMaybe(createApplyCommand()(context, applyArgs));
+          if (!applyReport.ok) {
+            return {
+              ...applyReport,
+              findings: [...findings, ...applyReport.findings]
+            };
+          }
+          findings.push(...applyReport.findings);
+
+          if (confirmationFingerprint) {
+            const verifyReport = awaitMaybe(
+              createVerifyCommand()(context, [
+                "--repo",
+                repoDestination,
+                "--target-root",
+                targetRoot,
+                "--adapter",
+                adapter
+              ])
+            );
+            findings.push(...verifyReport.findings);
+            if (!verifyReport.ok) {
+              return {
+                ...verifyReport,
+                findings
+              };
+            }
+          }
+        }
       } else {
         findings.push({
           id: "setup.import-confirmation-required",
@@ -112,6 +179,13 @@ export function createSetupCommand(): CommandHandler {
       findings
     };
   };
+}
+
+function awaitMaybe<T>(value: T | Promise<T>): T {
+  if (value instanceof Promise) {
+    throw new Error("setup command expected synchronous command helpers");
+  }
+  return value;
 }
 
 function sample<T>(values: T[]): T[] {

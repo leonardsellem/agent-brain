@@ -189,6 +189,92 @@ describe("setup CLI", () => {
     expect(readFileSync(skillPath, "utf8")).toBe("# Review\n");
     expect(readFileSync(authPath, "utf8")).toBe("token = \"sk-test-secret-value\"\n");
   });
+
+  it("backs up selected targets and requires exact fingerprint before live rewrite", () => {
+    const home = mkdtempSync(path.join(os.tmpdir(), "agent-brain-setup-home-"));
+    const repo = path.join(home, ".agent-brain");
+    const targetRoot = mkdtempSync(path.join(os.tmpdir(), "agent-brain-setup-target-"));
+    const skillPath = path.join(home, ".claude/skills/review/SKILL.md");
+    mkdirSync(path.dirname(skillPath), { recursive: true });
+    writeFileSync(skillPath, "# Review\n");
+
+    const dryRun = runCli([
+      "setup",
+      "--confirm-import",
+      "--repo",
+      repo,
+      "--target-root",
+      targetRoot,
+      "--adapter",
+      "claude-code",
+      "--json"
+    ], { HOME: home });
+    const dryRunReport = JSON.parse(dryRun.stdout);
+    const applyDryRun = dryRunReport.findings.find((finding: { id: string }) => finding.id === "apply.dry-run");
+    const backup = dryRunReport.findings.find((finding: { id: string }) => finding.id === "setup.backup-created");
+
+    expect(dryRun.status).toBe(0);
+    expect(backup).toEqual(
+      expect.objectContaining({
+        path: targetRoot,
+        provenance: expect.objectContaining({
+          backupPath: expect.stringContaining(".agent-brain/backups/")
+        })
+      })
+    );
+    expect(applyDryRun.provenance.operations).toEqual([
+      expect.objectContaining({
+        path: path.join(targetRoot, "skills/review/SKILL.md"),
+        content: "# Review\n"
+      })
+    ]);
+    expect(existsSync(path.join(targetRoot, "skills/review/SKILL.md"))).toBe(false);
+
+    const refused = runCli([
+      "setup",
+      "--confirm-import",
+      "--repo",
+      repo,
+      "--target-root",
+      targetRoot,
+      "--adapter",
+      "claude-code",
+      "--confirm-fingerprint",
+      "sha256:wrong",
+      "--json"
+    ], { HOME: home });
+    expect(refused.status).toBe(1);
+    expect(existsSync(path.join(targetRoot, "skills/review/SKILL.md"))).toBe(false);
+
+    const applied = runCli([
+      "setup",
+      "--confirm-import",
+      "--repo",
+      repo,
+      "--target-root",
+      targetRoot,
+      "--adapter",
+      "claude-code",
+      "--confirm-fingerprint",
+      applyDryRun.provenance.fingerprint,
+      "--json"
+    ], { HOME: home });
+    const appliedReport = JSON.parse(applied.stdout);
+
+    expect(applied.status).toBe(0);
+    expect(readFileSync(path.join(targetRoot, "skills/review/SKILL.md"), "utf8")).toBe("# Review\n");
+    expect(appliedReport.findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "apply.snapshot-created"
+        }),
+        expect.objectContaining({
+          id: "verify.checked",
+          path: targetRoot
+        })
+      ])
+    );
+  });
 });
 
 function runCli(args: string[], env: NodeJS.ProcessEnv = {}) {

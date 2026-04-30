@@ -63,6 +63,10 @@ const commandHelpOptions: Record<CommandName, string[]> = {
     "--source-root <path>         Include an additional import source root; repeatable.",
     "--repo <path>                Use this Agent Brain repo destination instead of the default.",
     "--confirm-import            Confirm the reviewed setup summary and write the canonical repo.",
+    "--target-root <path>         Optional live target root to dry-run after confirmed import.",
+    "--adapter <claude-code|codex> Adapter used for optional live target planning.",
+    "--profile <id>               Profile to materialize; defaults to profile.default.",
+    "--confirm-fingerprint <sha>  Confirm the exact reviewed dry-run fingerprint before mutation.",
     "--json                      Render structured JSON output without interactive prompts."
   ],
   doctor: [
