@@ -140,6 +140,7 @@ export function createSetupCommand(): CommandHandler {
           findings.push(...applyReport.findings);
 
           if (confirmationFingerprint) {
+            const snapshotFinding = applyReport.findings.find((finding) => finding.id === "apply.snapshot-created");
             const verifyReport = awaitMaybe(
               createVerifyCommand()(context, [
                 "--repo",
@@ -151,6 +152,14 @@ export function createSetupCommand(): CommandHandler {
               ])
             );
             findings.push(...verifyReport.findings);
+            if (snapshotFinding) {
+              findings.push(createRecoveryGuidanceFinding({
+                backupPath: backup.backupPath,
+                snapshotFinding,
+                targetRoot,
+                verifyOk: verifyReport.ok
+              }));
+            }
             if (!verifyReport.ok) {
               return {
                 ...verifyReport,
@@ -190,6 +199,45 @@ function awaitMaybe<T>(value: T | Promise<T>): T {
 
 function sample<T>(values: T[]): T[] {
   return values.slice(0, setupReportSampleLimit);
+}
+
+function createRecoveryGuidanceFinding(input: {
+  backupPath: string;
+  snapshotFinding: Finding;
+  targetRoot: string;
+  verifyOk: boolean;
+}): Finding {
+  const snapshotPath = String(input.snapshotFinding.provenance?.snapshotPath ?? "");
+  const lockPath = String(input.snapshotFinding.provenance?.lockPath ?? "");
+  const changedPaths = input.snapshotFinding.provenance?.changedPaths;
+  const rollbackCommand = snapshotPath
+    ? `agent-brain rollback --snapshot ${quoteShell(snapshotPath)} --target-root ${quoteShell(input.targetRoot)}`
+    : undefined;
+
+  return {
+    id: "setup.recovery-guidance",
+    severity: input.verifyOk ? "info" : "high",
+    category: "generated-target",
+    path: input.targetRoot,
+    message: input.verifyOk
+      ? "Live rewrite verification completed; recovery evidence is available."
+      : "Live rewrite verification failed; use recovery evidence before continuing.",
+    recommendation: rollbackCommand
+      ? `Keep the backup and snapshot paths. To restore the baseline, run: ${rollbackCommand}`
+      : "Keep the backup evidence and inspect the apply snapshot before continuing.",
+    provenance: {
+      backupPath: input.backupPath,
+      snapshotPath,
+      lockPath,
+      changedPaths: Array.isArray(changedPaths) ? changedPaths : [],
+      verifyOk: input.verifyOk,
+      rollbackCommand
+    }
+  };
+}
+
+function quoteShell(value: string): string {
+  return `'${value.replaceAll("'", "'\\''")}'`;
 }
 
 function optionValue(args: string[], option: string): string | undefined {

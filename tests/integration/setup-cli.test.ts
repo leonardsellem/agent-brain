@@ -271,6 +271,15 @@ describe("setup CLI", () => {
         expect.objectContaining({
           id: "verify.checked",
           path: targetRoot
+        }),
+        expect.objectContaining({
+          id: "setup.recovery-guidance",
+          path: targetRoot,
+          recommendation: expect.stringContaining("agent-brain rollback"),
+          provenance: expect.objectContaining({
+            backupPath: expect.stringContaining(".agent-brain/backups/"),
+            rollbackCommand: expect.stringContaining("agent-brain rollback")
+          })
         })
       ])
     );
