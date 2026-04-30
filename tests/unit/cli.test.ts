@@ -75,6 +75,29 @@ describe("agent-brain CLI", () => {
     });
   });
 
+  it("keeps every public command surface free of developer-preview fixture guardrails", async () => {
+    const cli = createCli();
+    const scenarios = [
+      ["doctor", "--json"],
+      ["import", "--json"],
+      ["plan", "--json"],
+      ["apply", "--target-root", "/tmp/agent-brain-target", "--json"],
+      ["bootstrap", "--target-root", "/tmp/agent-brain-target", "--json"],
+      ["verify", "--target-root", "/tmp/agent-brain-target", "--json"],
+      ["rollback", "--json"],
+      ["explain-conflict", "--json"]
+    ];
+
+    for (const args of scenarios) {
+      const result = await cli.run(args);
+      const output = `${result.stdout}\n${result.stderr}`;
+
+      expect(output, args.join(" ")).not.toMatch(/developer[- ]preview/i);
+      expect(output, args.join(" ")).not.toContain("fixture_required");
+      expect(output, args.join(" ")).not.toMatch(/requires a scannable filesystem fixture/i);
+    }
+  });
+
   it("passes fixture filesystem ports to command modules", async () => {
     const seenRoots: string[] = [];
     const cli = createCli({

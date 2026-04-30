@@ -67,6 +67,8 @@ const commandHelpOptions: Record<CommandName, string[]> = {
   ],
   plan: [
     "--fixture <path>             Read a synthetic scannable fixture.",
+    "--claude-root <path>         Preview adoption from an explicit Claude Code root.",
+    "--codex-root <path>          Preview adoption from an explicit Codex root.",
     "--source-root <path>         Preview adoption from an explicit live source root; repeatable.",
     "--json                      Render structured JSON output."
   ],

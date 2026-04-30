@@ -11,7 +11,7 @@ export function createPlanCommand(): CommandHandler {
         ok: false,
         error: {
           code: "invalid_arguments",
-          message: "plan requires a scannable filesystem fixture"
+          message: "plan requires --claude-root, --codex-root, --source-root, or --fixture"
         },
         findings: []
       };
@@ -45,7 +45,7 @@ export function createImportCommand(): CommandHandler {
         ok: false,
         error: {
           code: "invalid_arguments",
-          message: "import requires a scannable filesystem fixture"
+          message: "import requires --claude-root, --codex-root, --source-root, or --fixture"
         },
         findings: []
       };

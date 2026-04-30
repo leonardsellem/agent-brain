@@ -22,7 +22,7 @@ export function createApplyCommand(): CommandHandler {
         ok: false,
         error: {
           code: "apply_requires_target",
-          message: "apply requires --target-root plus fixture-backed dry-run evidence"
+          message: "apply requires --target-root; use --repo for live materialization or --fixture for deterministic rehearsal"
         },
         findings: []
       };
@@ -37,7 +37,7 @@ export function createApplyCommand(): CommandHandler {
       return {
         ok: false,
         error: {
-          code: "fixture_required",
+          code: "apply_source_required",
           message: "apply requires --repo for live materialization or --fixture for deterministic rehearsal"
         },
         findings: []

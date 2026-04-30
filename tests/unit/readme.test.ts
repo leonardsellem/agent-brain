@@ -57,7 +57,7 @@ describe("README", () => {
     }
   });
 
-  it("documents the compiled fixture-backed preview workflow safely", () => {
+  it("documents the compiled fixture-backed rehearsal workflow safely", () => {
     const readme = readFileSync(readmePath, "utf8");
 
     expect(readme).toContain("node dist/cli.js doctor --fixture tests/fixtures/e2e-persona/scannable.json");

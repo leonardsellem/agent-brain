@@ -6,7 +6,20 @@ export function createBootstrapCommand(): CommandHandler {
   return async (context, args) => {
     const report = await apply(context, args);
     if (!report.ok) {
-      return report;
+      return {
+        ...report,
+        error: {
+          code: report.error.code.replace(/^apply/, "bootstrap"),
+          message: report.error.message
+            .replace(/^apply/, "bootstrap")
+            .replace(/live materialization/g, "bootstrap materialization")
+        },
+        findings: report.findings.map((finding) => ({
+          ...finding,
+          id: finding.id.replace(/^apply\./, "bootstrap."),
+          message: finding.message.replace(/^Apply/, "Bootstrap").replace(/^Live apply/, "Bootstrap")
+        }))
+      };
     }
 
     return {
