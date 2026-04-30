@@ -63,14 +63,37 @@ describe("README", () => {
     expect(readme).toContain("node dist/cli.js doctor --fixture tests/fixtures/e2e-persona/scannable.json");
     expect(readme).toContain("node dist/cli.js import --fixture tests/fixtures/e2e-persona/scannable.json --repo tmp/agent-brain-preview");
     expect(readme).toContain("node dist/cli.js apply --fixture tests/fixtures/e2e-persona/scannable.json --target-root /synthetic/target --json");
-    expect(readme).toContain("agent-brain import --claude-root tmp/live-claude --repo tmp/agent-brain-live --json");
+    expect(readme).toContain('AB_DEMO="$(pwd)/tmp/agent-brain-demo"');
+    expect(readme).toContain('agent-brain import --claude-root "$AB_DEMO/live-claude" --repo "$AB_DEMO/agent-brain-live" --json');
     expect(readme).toContain("FINGERPRINT=");
     expect(readme).toContain("SNAPSHOT=");
-    expect(readme).toContain("agent-brain bootstrap --repo tmp/agent-brain-live --target-root tmp/live-target-b --adapter claude-code --profile profile.default --json");
+    expect(readme).toContain('agent-brain bootstrap --repo "$AB_DEMO/agent-brain-live" --target-root "$AB_DEMO/live-target-b" --adapter claude-code --profile profile.default --json');
     expect(readme).not.toContain("sha256:from-dry-run");
     expect(readme).not.toContain("tmp/live-source");
     expect(readme).toContain("node dist/cli.js explain-conflict '~/.codex/history.jsonl'");
     expect(readme).not.toContain("node dist/cli.js explain-conflict ~/.codex/history.jsonl");
+  });
+
+  it("makes Quick Start command inputs explicit", () => {
+    const readme = readFileSync(readmePath, "utf8");
+
+    for (const phrase of [
+      "The important mental model: every command needs to know which source it is looking at, except `doctor`.",
+      "`agent-brain doctor` can run with no arguments.",
+      "`agent-brain plan` previews adoption from an input source and therefore needs `--claude-root`, `--codex-root`, `--source-root`, or `--fixture`.",
+      "`agent-brain import` needs one of those same input sources plus `--repo <path>` because it writes the canonical Agent Brain repo output.",
+      'agent-brain plan --claude-root "$AB_DEMO/live-claude" --json',
+      'agent-brain import --claude-root "$AB_DEMO/live-claude" --repo "$AB_DEMO/agent-brain-live" --json'
+    ]) {
+      expect(readme).toContain(phrase);
+    }
+
+    expect(readme.indexOf("agent-brain doctor")).toBeLessThan(
+      readme.indexOf('agent-brain plan --claude-root "$AB_DEMO/live-claude"')
+    );
+    expect(readme.indexOf('agent-brain plan --claude-root "$AB_DEMO/live-claude"')).toBeLessThan(
+      readme.indexOf('agent-brain import --claude-root "$AB_DEMO/live-claude"')
+    );
   });
 
   it("documents the live safety gates before live migration commands", () => {
