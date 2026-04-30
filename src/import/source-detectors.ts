@@ -12,34 +12,44 @@ export function detectImportSources(entries: ScannableEntry[]): ImportSource[] {
   const sources = new Map<string, ImportSource>();
 
   for (const entry of entries) {
-    const source = detectSource(entry);
-    if (!source) {
-      continue;
+    for (const candidatePath of [entry.path, entry.realPath]) {
+      if (!candidatePath) {
+        continue;
+      }
+
+      const source = detectSource(candidatePath, entry);
+      if (!source) {
+        continue;
+      }
+      sources.set(`${source.kind}:${source.root}`, source);
     }
-    sources.set(`${source.kind}:${source.root}`, source);
   }
 
   return [...sources.values()];
 }
 
-function detectSource(entry: ScannableEntry): ImportSource | undefined {
-  if (entry.path.includes("/.dotstate/") || entry.path.endsWith("/.dotstate/config.yaml")) {
-    return { kind: "dotstate", root: rootBefore(entry.path, ".dotstate"), confidence: 0.95 };
+function detectSource(candidatePath: string, entry: ScannableEntry): ImportSource | undefined {
+  if (candidatePath.includes("/.dotstate/") || candidatePath.endsWith("/.dotstate/config.yaml")) {
+    return { kind: "dotstate", root: rootBefore(candidatePath, ".dotstate"), confidence: 0.95 };
   }
 
-  if (entry.path.includes("/chezmoi/")) {
-    return { kind: "chezmoi", root: rootBefore(entry.path, "chezmoi"), confidence: 0.9 };
+  if (candidatePath.includes("/dotstate/storage/") || candidatePath.endsWith("/dotstate/config.yaml")) {
+    return { kind: "dotstate", root: rootBefore(candidatePath, "dotstate"), confidence: 0.95 };
   }
 
-  if (entry.path.includes("/.stow/")) {
-    return { kind: "stow", root: rootThrough(entry.path, ".stow"), confidence: 0.85 };
+  if (candidatePath.includes("/chezmoi/")) {
+    return { kind: "chezmoi", root: rootBefore(candidatePath, "chezmoi"), confidence: 0.9 };
+  }
+
+  if (candidatePath.includes("/.stow/")) {
+    return { kind: "stow", root: rootThrough(candidatePath, ".stow"), confidence: 0.85 };
   }
 
   if (entry.gitBare) {
-    return { kind: "bare-git", root: path.posix.dirname(entry.path), confidence: 0.85 };
+    return { kind: "bare-git", root: path.posix.dirname(candidatePath), confidence: 0.85 };
   }
 
-  const homeRoot = detectHomeRoot(entry.path);
+  const homeRoot = detectHomeRoot(candidatePath);
   if (homeRoot) {
     return { kind: "home", root: homeRoot, confidence: 0.7 };
   }

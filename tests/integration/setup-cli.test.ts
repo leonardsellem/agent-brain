@@ -1,4 +1,6 @@
 import { spawnSync } from "node:child_process";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 
@@ -35,22 +37,89 @@ describe("setup CLI", () => {
 
     expect(setup.status).toBe(0);
     expect(setup.stderr).toBe("");
-    expect(JSON.parse(setup.stdout)).toMatchObject({
-      ok: true,
-      findings: [
+    expect(JSON.parse(setup.stdout).findings).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           id: "setup.confirmation-required",
           severity: "info"
         })
-      ]
-    });
+      ])
+    );
     expect(setup.stdout).not.toContain(process.env.HOME ?? "");
+  });
+
+  it("discovers disposable symlinked dotstate-backed roots and agents without mutation", () => {
+    const home = mkdtempSync(path.join(os.tmpdir(), "agent-brain-setup-home-"));
+    const claudeSkill = path.join(home, ".config/dotstate/storage/Personal/.claude/skills/review/SKILL.md");
+    const codexRoot = path.join(home, ".codex");
+    const agentsSkill = path.join(home, ".agents/skills/helper/SKILL.md");
+    mkdirSync(path.dirname(claudeSkill), { recursive: true });
+    mkdirSync(path.join(codexRoot, "plugins/cache/large-plugin"), { recursive: true });
+    mkdirSync(path.dirname(agentsSkill), { recursive: true });
+    writeFileSync(claudeSkill, "# Dotstate Review\n");
+    writeFileSync(path.join(codexRoot, "auth.json"), "token = \"sk-test-secret-value\"\n");
+    writeFileSync(path.join(codexRoot, "plugins/cache/large-plugin/SKILL.md"), "# Cached\n");
+    writeFileSync(agentsSkill, "# Agent Helper\n");
+    mkdirSync(path.join(home, ".claude"), { recursive: true });
+    symlinkSync(
+      path.join(home, ".config/dotstate/storage/Personal/.claude/skills"),
+      path.join(home, ".claude/skills")
+    );
+
+    const beforeClaudeSkill = readFileSync(claudeSkill, "utf8");
+    const beforeAgentsSkill = readFileSync(agentsSkill, "utf8");
+    const setup = runCli(["setup", "--json"], { HOME: home });
+    const report = JSON.parse(setup.stdout);
+    const discovery = report.findings.find((finding: { id: string }) => finding.id === "setup.discovery");
+
+    expect(setup.status).toBe(0);
+    expect(discovery).toMatchObject({
+      provenance: {
+        visibleRoots: expect.arrayContaining(["~/.agents", "~/.claude", "~/.codex"]),
+        sources: expect.arrayContaining([
+          expect.objectContaining({
+            kind: "dotstate",
+            root: "~/.config/dotstate"
+          }),
+          expect.objectContaining({
+            kind: "home",
+            root: "~/.agents"
+          })
+        ]),
+        symlinks: expect.arrayContaining([
+          expect.objectContaining({
+            visiblePath: "~/.claude/skills",
+            realPath: "~/.config/dotstate/storage/Personal/.claude/skills",
+            broken: false
+          })
+        ]),
+        adapterTargets: expect.arrayContaining([
+          expect.objectContaining({
+            adapter: "claude-code",
+            visibleRoot: "~/.claude"
+          }),
+          expect.objectContaining({
+            adapter: "codex",
+            visibleRoot: "~/.agents"
+          })
+        ])
+      }
+    });
+    expect(JSON.stringify(report)).not.toContain(home);
+    expect(JSON.stringify(report)).not.toContain("large-plugin/SKILL.md");
+    expect(readFileSync(claudeSkill, "utf8")).toBe(beforeClaudeSkill);
+    expect(readFileSync(agentsSkill, "utf8")).toBe(beforeAgentsSkill);
+    expect(existsSync(path.join(home, ".agent-brain"))).toBe(false);
   });
 });
 
-function runCli(args: string[]) {
+function runCli(args: string[], env: NodeJS.ProcessEnv = {}) {
   return spawnSync(process.execPath, [cliPath, ...args], {
     cwd: repoRoot,
+    env: {
+      ...process.env,
+      ...env
+    },
     encoding: "utf8"
   });
 }

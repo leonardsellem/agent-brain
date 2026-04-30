@@ -4,7 +4,11 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { renderJsonReport } from "./reporting/json.js";
 import { renderTextReport } from "./reporting/text.js";
 import { loadScannableFixture, ScannableFixtureError } from "./core/scannable-fixture.js";
-import { createDefaultDiagnosisScannableFsPort, createLiveScannableFsPort } from "./import/live-scanner.js";
+import {
+  createDefaultDiagnosisScannableFsPort,
+  createDefaultSetupScannableFsPort,
+  createLiveScannableFsPort
+} from "./import/live-scanner.js";
 import type { CommandContext, CommandHandler, FsPort, Report } from "./types.js";
 import { createApplyCommand } from "./commands/apply.js";
 import { createBootstrapCommand } from "./commands/bootstrap.js";
@@ -178,7 +182,7 @@ export function createCli(options: CliOptions = {}) {
       const fixturePath = optionValue(args, "--fixture");
       const commandFs = fixturePath
         ? loadFixtureForCli(fixturePath)
-        : loadLiveRootsForCli(args) ?? loadDefaultDiagnosisForCli(rawCommand, providedFs) ?? { fs };
+        : loadLiveRootsForCli(args) ?? loadDefaultRootsForCli(rawCommand, providedFs) ?? { fs };
       if ("error" in commandFs) {
         const report: Report = {
           ok: false,
@@ -331,14 +335,24 @@ function loadLiveRootsForCli(args: string[]): { fs: FsPort } | undefined {
   };
 }
 
-function loadDefaultDiagnosisForCli(command: CommandName, providedFs: FsPort | undefined): { fs: FsPort } | undefined {
-  if (command !== "doctor" || providedFs) {
+function loadDefaultRootsForCli(command: CommandName, providedFs: FsPort | undefined): { fs: FsPort } | undefined {
+  if (providedFs) {
     return undefined;
   }
 
-  return {
-    fs: createDefaultDiagnosisScannableFsPort()
-  };
+  if (command === "doctor") {
+    return {
+      fs: createDefaultDiagnosisScannableFsPort()
+    };
+  }
+
+  if (command === "setup") {
+    return {
+      fs: createDefaultSetupScannableFsPort()
+    };
+  }
+
+  return undefined;
 }
 
 function packageIdentity(): string {

@@ -8,6 +8,7 @@ import type { TargetAdapterName } from "../core/provenance.js";
 export interface LiveScanInputs {
   claudeRoots?: string[];
   codexRoots?: string[];
+  agentsRoots?: string[];
   sourceRoots?: string[];
   maxEntries?: number;
 }
@@ -19,6 +20,9 @@ export function createLiveScannableFsPort(inputs: LiveScanInputs): ScannableFsPo
     ),
     ...(inputs.codexRoots ?? []).map((root) =>
       withLogicalRoot(scanLiveRoot({ root, adapter: "codex", maxEntries: inputs.maxEntries }), "~/.codex")
+    ),
+    ...(inputs.agentsRoots ?? []).map((root) =>
+      withLogicalRoot(scanLiveRoot({ root, adapter: "codex", maxEntries: inputs.maxEntries }), "~/.agents")
     ),
     ...(inputs.sourceRoots ?? []).map((root) => scanLiveRoot({ root, maxEntries: inputs.maxEntries }))
   ];
@@ -34,6 +38,7 @@ export function createDefaultDiagnosisScannableFsPort(): ScannableFsPort {
   const scanned = createLiveScannableFsPort({
     claudeRoots: [path.join(home, ".claude")],
     codexRoots: [path.join(home, ".codex")],
+    agentsRoots: [path.join(home, ".agents")],
     maxEntries: 5_000
   });
   return {
@@ -42,9 +47,14 @@ export function createDefaultDiagnosisScannableFsPort(): ScannableFsPort {
       ...entry,
       path: toDisplayPath(entry.path),
       realPath: entry.realPath ? toDisplayPath(entry.realPath) : undefined,
+      linkTarget: entry.linkTarget ? toDisplayPath(entry.linkTarget) : undefined,
       error: entry.error ? toDisplayPath(entry.error) : undefined
     }))
   };
+}
+
+export function createDefaultSetupScannableFsPort(): ScannableFsPort {
+  return createDefaultDiagnosisScannableFsPort();
 }
 
 function withLogicalRoot(fs: ScannableFsPort, logicalRoot: string): ScannableFsPort {
