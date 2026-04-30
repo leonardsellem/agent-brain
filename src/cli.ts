@@ -12,6 +12,7 @@ import { createDoctorCommand } from "./commands/doctor.js";
 import { createExplainConflictCommand } from "./commands/explain-conflict.js";
 import { createImportCommand, createPlanCommand } from "./commands/import.js";
 import { createRollbackCommand } from "./commands/rollback.js";
+import { createSetupCommand } from "./commands/setup.js";
 import { createVerifyCommand } from "./commands/verify.js";
 
 export interface CliResult {
@@ -26,6 +27,7 @@ export interface CliOptions {
 }
 
 type CommandName =
+  | "setup"
   | "doctor"
   | "import"
   | "plan"
@@ -36,6 +38,7 @@ type CommandName =
   | "explain-conflict";
 
 const commandPurposes: Record<CommandName, string> = {
+  setup: "Run guided setup to discover sources, preview import, and choose safe next steps.",
   doctor: "Diagnose local agent app roots and ownership risks.",
   import: "Import portable source into an Agent Brain repo plan.",
   plan: "Show proposed adoption or apply changes before writing.",
@@ -49,6 +52,14 @@ const commandPurposes: Record<CommandName, string> = {
 const commandNames = Object.keys(commandPurposes) as CommandName[];
 
 const commandHelpOptions: Record<CommandName, string[]> = {
+  setup: [
+    "--fixture <path>             Read a synthetic scannable fixture.",
+    "--claude-root <path>         Include an explicit Claude Code root in guided setup.",
+    "--codex-root <path>          Include an explicit Codex root in guided setup.",
+    "--source-root <path>         Include an additional import source root; repeatable.",
+    "--repo <path>                Use this Agent Brain repo destination instead of the default.",
+    "--json                      Render structured JSON output without interactive prompts."
+  ],
   doctor: [
     "(no roots)                  Run a default read-only diagnosis of standard local app roots.",
     "--fixture <path>             Read a synthetic scannable fixture.",
@@ -197,6 +208,7 @@ export function createCli(options: CliOptions = {}) {
 
 function defaultCommands(): Record<CommandName, CommandHandler> {
   return {
+    setup: createSetupCommand(),
     doctor: createDoctorCommand(),
     import: createImportCommand(),
     plan: createPlanCommand(),
