@@ -190,6 +190,19 @@ describe("setup CLI", () => {
     expect(readFileSync(authPath, "utf8")).toBe("token = \"sk-test-secret-value\"\n");
   });
 
+  it("preserves full source content during default setup import", () => {
+    const home = mkdtempSync(path.join(os.tmpdir(), "agent-brain-setup-home-"));
+    const skillPath = path.join(home, ".claude/skills/long/SKILL.md");
+    const longContent = `# Long Skill\n\n${"Use the whole source file.\n".repeat(300)}`;
+    mkdirSync(path.dirname(skillPath), { recursive: true });
+    writeFileSync(skillPath, longContent);
+
+    const setup = runCli(["setup", "--confirm-import", "--json"], { HOME: home });
+
+    expect(setup.status).toBe(0);
+    expect(readFileSync(path.join(home, ".agent-brain/packages/long/SKILL.md"), "utf8")).toBe(longContent);
+  });
+
   it("backs up selected targets and requires exact fingerprint before live rewrite", () => {
     const home = mkdtempSync(path.join(os.tmpdir(), "agent-brain-setup-home-"));
     const repo = path.join(home, ".agent-brain");

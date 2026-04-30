@@ -187,7 +187,7 @@ export function createCli(options: CliOptions = {}) {
       const fixturePath = optionValue(args, "--fixture");
       const commandFs = fixturePath
         ? loadFixtureForCli(fixturePath)
-        : loadLiveRootsForCli(args) ?? loadDefaultRootsForCli(rawCommand, providedFs) ?? { fs };
+        : loadLiveRootsForCli(args) ?? loadDefaultRootsForCli(rawCommand, providedFs, args) ?? { fs };
       if ("error" in commandFs) {
         const report: Report = {
           ok: false,
@@ -340,7 +340,11 @@ function loadLiveRootsForCli(args: string[]): { fs: FsPort } | undefined {
   };
 }
 
-function loadDefaultRootsForCli(command: CommandName, providedFs: FsPort | undefined): { fs: FsPort } | undefined {
+function loadDefaultRootsForCli(
+  command: CommandName,
+  providedFs: FsPort | undefined,
+  args: string[]
+): { fs: FsPort } | undefined {
   if (providedFs) {
     return undefined;
   }
@@ -353,7 +357,9 @@ function loadDefaultRootsForCli(command: CommandName, providedFs: FsPort | undef
 
   if (command === "setup") {
     return {
-      fs: createDefaultSetupScannableFsPort()
+      fs: createDefaultSetupScannableFsPort({
+        fullContent: args.includes("--confirm-import")
+      })
     };
   }
 
