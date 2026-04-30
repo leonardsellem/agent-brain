@@ -1,6 +1,6 @@
 {
   "name": "@leonardsellem/agent-brain",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Git-backed package and profile manager for portable AI coding-agent capabilities.",
   "type": "module",
   "license": "MIT",
