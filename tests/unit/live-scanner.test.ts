@@ -21,6 +21,11 @@ describe("live scanner", () => {
             path: "~/.codex",
             kind: "unreadable",
             error: expect.stringContaining("~/.codex")
+          }),
+          expect.objectContaining({
+            path: "~/.agents",
+            kind: "unreadable",
+            error: expect.stringContaining("~/.agents")
           })
         ])
       );

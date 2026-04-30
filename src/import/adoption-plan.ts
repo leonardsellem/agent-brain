@@ -26,7 +26,7 @@ export interface AdoptionPlan {
 
 export function createAdoptionPlan(entries: ScannableEntry[]): AdoptionPlan {
   const packages = new Map<string, AgentBrainPackage>();
-  const packagePaths = new Map<string, string[]>();
+  const packagePaths = new Map<string, { path: string; sourceIdentity: string }[]>();
   const exclusions: AgentBrainExclusion[] = [];
   const rejections: AdoptionRejection[] = [];
   const packageSources: Record<string, string> = {};
@@ -55,7 +55,13 @@ export function createAdoptionPlan(entries: ScannableEntry[]): AdoptionPlan {
         packages.set(id, pkg);
         packageSources[pkg.files[0]!] = readPortableSourceContent(entry);
       }
-      packagePaths.set(id, [...(packagePaths.get(id) ?? []), entry.path]);
+      packagePaths.set(id, [
+        ...(packagePaths.get(id) ?? []),
+        {
+          path: entry.path,
+          sourceIdentity: sourceIdentityFor(entry)
+        }
+      ]);
       continue;
     }
 
@@ -76,11 +82,16 @@ export function createAdoptionPlan(entries: ScannableEntry[]): AdoptionPlan {
   }
 
   const conflicts = [...packagePaths.entries()]
-    .filter(([, paths]) => new Set(paths).size > 1)
     .map(([packageId, paths]) => ({
+      packageId,
+      paths,
+      uniqueSources: new Set(paths.map((entry) => entry.sourceIdentity))
+    }))
+    .filter(({ uniqueSources }) => uniqueSources.size > 1)
+    .map(({ packageId, paths }) => ({
       id: "package-name-conflict" as const,
       packageId,
-      paths
+      paths: [...new Set(paths.map((entry) => entry.path))]
     }));
 
   const packageIds = [...packages.keys()];
@@ -97,6 +108,10 @@ export function createAdoptionPlan(entries: ScannableEntry[]): AdoptionPlan {
     rejections,
     packageSources
   };
+}
+
+function sourceIdentityFor(entry: ScannableEntry): string {
+  return entry.realPath ?? entry.path;
 }
 
 function buildTargets(packages: AgentBrainPackage[]): Partial<Record<TargetAdapterName, { packageIds: string[] }>> {

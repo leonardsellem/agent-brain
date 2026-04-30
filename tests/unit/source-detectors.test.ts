@@ -34,4 +34,29 @@ describe("import source detectors", () => {
       }
     ]);
   });
+
+  it("detects source topology from real paths behind symlinks", () => {
+    const sources = detectImportSources([
+      {
+        path: "/home/.claude/skills/review",
+        kind: "symlink",
+        realPath: "/home/.config/dotstate/storage/Personal/.claude/skills/review"
+      }
+    ]);
+
+    expect(sources).toEqual(
+      expect.arrayContaining([
+        {
+          kind: "dotstate",
+          root: "/home/.config/dotstate",
+          confidence: 0.95
+        },
+        {
+          kind: "home",
+          root: "/home/.claude",
+          confidence: 0.7
+        }
+      ])
+    );
+  });
 });

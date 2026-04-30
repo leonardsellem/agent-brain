@@ -1,9 +1,9 @@
 import { bootstrapTarget, verifyTarget } from "../apply/verifier.js";
 import { scanLiveRoot } from "../core/live-fs-port.js";
-import type { AgentBrainRepo } from "../core/model.js";
+import type { AgentBrainRepo, MaterializationLock } from "../core/model.js";
 import { isScannableFsPort } from "../core/fs-port.js";
 import type { TargetAdapterName } from "../core/provenance.js";
-import { readMaterializationLock, validateLockAdapter } from "../materialize/lock-store.js";
+import { readMaterializationLock } from "../materialize/lock-store.js";
 import { createAdoptionPlan } from "../import/adoption-plan.js";
 import type { VirtualTarget } from "../apply/dry-run.js";
 import type { CommandHandler, Finding } from "../types.js";
@@ -128,36 +128,19 @@ function verifyLiveTarget(repoRoot: string, targetRoot: string, args: string[]):
     };
   }
 
-  const adapterValidation = validateLockAdapter(lockResult.lock, adapter);
-  if (!adapterValidation.ok) {
-    return {
-      ok: false,
-      error: {
-        code: "lock_adapter_mismatch",
-        message: "materialization lock adapter does not match requested verify adapter"
-      },
-      findings: adapterValidation.errors.map((error) => ({
-        id: "lock-adapter-mismatch",
-        severity: "high",
-        category: "generated-target",
-        path: lockResult.path,
-        message: error
-      }))
-    };
-  }
-
+  const scopedLock = lockForTarget(lockResult.lock, adapter, targetRoot);
   const target = virtualTargetFromRoot(targetRoot, adapter);
-  const verificationFindings = verifyTarget(target, lockResult.lock);
+  const verificationFindings = verifyTarget(target, scopedLock);
   const checkedFinding: Finding = {
     id: "verify.checked",
     severity: "info",
     category: "generated-target",
     path: targetRoot,
-    message: `Checked ${lockResult.lock.entries.length} generated target entries`,
+    message: `Checked ${scopedLock.entries.length} generated target entries`,
     provenance: {
       targetRoot,
       lockPath: lockResult.path,
-      lockEntries: lockResult.lock.entries
+      lockEntries: scopedLock.entries
     }
   };
   const failed = verificationFindings.length > 0;
@@ -175,8 +158,23 @@ function verifyLiveTarget(repoRoot: string, targetRoot: string, args: string[]):
 
   return {
     ok: true,
-    summary: `${verificationFindings.length} verification findings for ${targetRoot} using ${lockResult.lock.entries.length} lock entries`,
+    summary: `${verificationFindings.length} verification findings for ${targetRoot} using ${scopedLock.entries.length} lock entries`,
     findings: [checkedFinding, ...verificationFindings]
+  };
+}
+
+function lockForTarget(
+  lock: MaterializationLock,
+  adapter: TargetAdapterName,
+  targetRoot: string
+): MaterializationLock {
+  const normalizedRoot = targetRoot.endsWith("/") ? targetRoot : `${targetRoot}/`;
+  return {
+    schemaVersion: lock.schemaVersion,
+    entries: lock.entries.filter((entry) =>
+      entry.adapter === adapter &&
+      (entry.targetPath === targetRoot || entry.targetPath.startsWith(normalizedRoot))
+    )
   };
 }
 

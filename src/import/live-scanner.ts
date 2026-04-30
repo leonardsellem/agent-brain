@@ -8,19 +8,24 @@ import type { TargetAdapterName } from "../core/provenance.js";
 export interface LiveScanInputs {
   claudeRoots?: string[];
   codexRoots?: string[];
+  agentsRoots?: string[];
   sourceRoots?: string[];
   maxEntries?: number;
+  contentSampleBytes?: number;
 }
 
 export function createLiveScannableFsPort(inputs: LiveScanInputs): ScannableFsPort {
   const scannedRoots = [
     ...(inputs.claudeRoots ?? []).map((root) =>
-      withLogicalRoot(scanLiveRoot({ root, adapter: "claude-code", maxEntries: inputs.maxEntries }), "~/.claude")
+      withLogicalRoot(scanLiveRoot(liveScanOptions({ root, adapter: "claude-code", inputs })), "~/.claude")
     ),
     ...(inputs.codexRoots ?? []).map((root) =>
-      withLogicalRoot(scanLiveRoot({ root, adapter: "codex", maxEntries: inputs.maxEntries }), "~/.codex")
+      withLogicalRoot(scanLiveRoot(liveScanOptions({ root, adapter: "codex", inputs })), "~/.codex")
     ),
-    ...(inputs.sourceRoots ?? []).map((root) => scanLiveRoot({ root, maxEntries: inputs.maxEntries }))
+    ...(inputs.agentsRoots ?? []).map((root) =>
+      withLogicalRoot(scanLiveRoot(liveScanOptions({ root, adapter: "codex", inputs })), "~/.agents")
+    ),
+    ...(inputs.sourceRoots ?? []).map((root) => scanLiveRoot(liveScanOptions({ root, inputs })))
   ];
 
   return {
@@ -34,6 +39,7 @@ export function createDefaultDiagnosisScannableFsPort(): ScannableFsPort {
   const scanned = createLiveScannableFsPort({
     claudeRoots: [path.join(home, ".claude")],
     codexRoots: [path.join(home, ".codex")],
+    agentsRoots: [path.join(home, ".agents")],
     maxEntries: 5_000
   });
   return {
@@ -42,8 +48,43 @@ export function createDefaultDiagnosisScannableFsPort(): ScannableFsPort {
       ...entry,
       path: toDisplayPath(entry.path),
       realPath: entry.realPath ? toDisplayPath(entry.realPath) : undefined,
+      linkTarget: entry.linkTarget ? toDisplayPath(entry.linkTarget) : undefined,
       error: entry.error ? toDisplayPath(entry.error) : undefined
     }))
+  };
+}
+
+export function createDefaultSetupScannableFsPort(options: { fullContent?: boolean } = {}): ScannableFsPort {
+  const home = os.homedir();
+  const scanned = createLiveScannableFsPort({
+    claudeRoots: [path.join(home, ".claude")],
+    codexRoots: [path.join(home, ".codex")],
+    agentsRoots: [path.join(home, ".agents")],
+    maxEntries: 5_000,
+    contentSampleBytes: options.fullContent ? Number.MAX_SAFE_INTEGER : undefined
+  });
+  return {
+    ...scanned,
+    entries: scanned.entries.map((entry) => ({
+      ...entry,
+      path: toDisplayPath(entry.path),
+      realPath: entry.realPath ? toDisplayPath(entry.realPath) : undefined,
+      linkTarget: entry.linkTarget ? toDisplayPath(entry.linkTarget) : undefined,
+      error: entry.error ? toDisplayPath(entry.error) : undefined
+    }))
+  };
+}
+
+function liveScanOptions(input: {
+  root: string;
+  adapter?: TargetAdapterName;
+  inputs: LiveScanInputs;
+}): Parameters<typeof scanLiveRoot>[0] {
+  return {
+    root: input.root,
+    adapter: input.adapter,
+    maxEntries: input.inputs.maxEntries,
+    contentSampleBytes: input.inputs.contentSampleBytes
   };
 }
 

@@ -3,6 +3,7 @@ import { createCli } from "../../src/cli.js";
 
 describe("agent-brain CLI", () => {
   const commands = [
+    "setup",
     "doctor",
     "import",
     "plan",
@@ -27,9 +28,13 @@ describe("agent-brain CLI", () => {
     const cli = createCli();
 
     const doctor = await cli.run(["doctor", "--help"]);
+    const setup = await cli.run(["setup", "--help"]);
     const apply = await cli.run(["apply", "--help"]);
     const bootstrap = await cli.run(["bootstrap", "--help"]);
 
+    expect(setup.stdout).toContain("guided setup");
+    expect(setup.stdout).toContain("--repo");
+    expect(setup.stdout).toContain("--json");
     expect(doctor.stdout).toContain("default read-only diagnosis");
     expect(doctor.stdout).toContain("--claude-root");
     expect(doctor.stdout).toContain("--codex-root");
@@ -58,6 +63,7 @@ describe("agent-brain CLI", () => {
     expect(result.exitCode).toBe(1);
     expect(result.stderr).toContain("Unknown command");
     expect(result.stderr).toContain("doctor");
+    expect(result.stderr).toContain("setup");
   });
 
   it("returns a structured error envelope for malformed json-output requests", async () => {
@@ -79,6 +85,7 @@ describe("agent-brain CLI", () => {
     const cli = createCli();
     const scenarios = [
       ["doctor", "--json"],
+      ["setup", "--json"],
       ["import", "--json"],
       ["plan", "--json"],
       ["apply", "--target-root", "/tmp/agent-brain-target", "--json"],
@@ -119,6 +126,44 @@ describe("agent-brain CLI", () => {
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain("fixture checked");
     expect(seenRoots).toEqual(["/tmp/agent-brain-fixture"]);
+  });
+
+  it("passes setup requests to the setup command module without live root access", async () => {
+    const seenRoots: string[] = [];
+    const cli = createCli({
+      commands: {
+        setup: async (context) => {
+          seenRoots.push(context.fs.root);
+          return {
+            ok: true,
+            findings: [
+              {
+                id: "setup.confirmation-required",
+                severity: "info",
+                category: "setup",
+                message: "Setup is ready to continue after confirmation"
+              }
+            ],
+            summary: "setup awaiting confirmation"
+          };
+        }
+      },
+      fs: { root: "/tmp/agent-brain-injected" }
+    });
+
+    const result = await cli.run(["setup", "--json"]);
+
+    expect(result.exitCode).toBe(0);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      ok: true,
+      summary: "setup awaiting confirmation",
+      findings: [
+        expect.objectContaining({
+          id: "setup.confirmation-required"
+        })
+      ]
+    });
+    expect(seenRoots).toEqual(["/tmp/agent-brain-injected"]);
   });
 
   it("loads --fixture JSON and passes it to command modules", async () => {

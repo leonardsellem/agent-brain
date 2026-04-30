@@ -64,6 +64,7 @@ Agent Brain reports diagnosis, import, verification, and conflict results using 
 ## Command Surface
 
 ```bash
+agent-brain setup
 agent-brain doctor
 agent-brain import
 agent-brain plan
@@ -78,6 +79,7 @@ All commands support text output by default and structured output with `--json` 
 
 | Command | Purpose |
 | --- | --- |
+| `setup` | Guided first-run discovery, import confirmation, and optional safe local rewrite. |
 | `doctor` | Scan known agent-app surfaces and explain ownership risks. |
 | `import` | Convert portable source candidates into canonical package/profile output. |
 | `plan` | Show proposed adoption or apply changes before writing. |
@@ -87,7 +89,7 @@ All commands support text output by default and structured output with `--json` 
 | `bootstrap` | Materialize a second-machine target from an Agent Brain repo. |
 | `explain-conflict` | Classify a conflicted path and recommend a semantic resolution. |
 
-The current implementation supports both a fixture-backed rehearsal path and an explicit live path for disposable or user-approved roots. Live commands require explicit roots, adapter/profile selection, a dry-run fingerprint, a baseline snapshot, a materialization lock, verify, rollback, and bootstrap evidence before the target is considered healthy.
+The current implementation supports guided setup, a fixture-backed rehearsal path, and explicit live paths for disposable or user-approved roots. Live mutation requires adapter/profile selection, a dry-run fingerprint, a baseline snapshot, a materialization lock, verification, rollback evidence, and generated-owned paths before a target is considered healthy.
 
 ![Agent Brain command journey for diagnosis, import, planning, apply, verification, rollback, bootstrap, and conflict explanation](https://raw.githubusercontent.com/leonardsellem/agent-brain/dev/docs/diagrams/agent-brain-command-journey.svg)
 
@@ -116,48 +118,102 @@ Prerequisites:
 - Node.js 20 or newer
 - npm
 
-Install the CLI from npm:
+Install the CLI from npm and confirm that the shell is running the installed version:
 
 ```bash
 npm install -g @leonardsellem/agent-brain
+agent-brain --version
 agent-brain --help
 ```
 
-Run against a disposable or explicitly approved setup first. The public release is designed for guarded live use:
-
-- Fixture-backed commands are the safest way to inspect the model before pointing it at personal state.
-- Disposable-root live rehearsal proves the full apply, verify, rollback, and bootstrap transaction.
-- A bounded personal-live canary has proven npm-installed diagnosis, import, dry-run, apply, verify, and rollback on real tracked roots.
-- Full personal setup materialization is a deliberate migration: run diagnosis and dry-run first, review the exact fingerprint and snapshot evidence, then confirm the apply.
-
-Live commands require explicit roots, dry-run fingerprint confirmation, a baseline snapshot, a materialization lock, verify, rollback, and bootstrap evidence before a target is considered healthy.
-
-For real tracked `.codex`, `.claude`, and `.dotstate` folders, use the [personal live npm E2E protocol](https://github.com/leonardsellem/agent-brain/blob/dev/docs/live-personal-npm-e2e-protocol.md) before any mutation. It keeps the npm-installed, Computer Use-visible pass non-mutating until a fresh Ring 2 approval names the exact dry-run fingerprint and recovery evidence.
-
-Run the live release path against disposable roots:
+If `agent-brain --version` does not print the new version after an install, force npm to refresh the global package:
 
 ```bash
-rm -rf tmp/live-claude tmp/live-codex tmp/live-target tmp/live-target-b tmp/agent-brain-live
-mkdir -p tmp/live-claude/skills/review tmp/live-codex
-printf '# Review\n\nPortable disposable skill.\n' > tmp/live-claude/skills/review/SKILL.md
+npm install -g @leonardsellem/agent-brain@latest --prefer-online
+```
 
-agent-brain doctor --claude-root tmp/live-claude --codex-root tmp/live-codex --json
-agent-brain import --claude-root tmp/live-claude --repo tmp/agent-brain-live --json
+The important mental model: start with `agent-brain setup` unless you already know the exact expert flags you need.
 
-DRY_RUN_JSON=$(agent-brain apply --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --profile profile.default --json)
+Run against a disposable or explicitly approved setup first. Setup discovery and summaries are read-only, import writes only the canonical Agent Brain repo, and live rewrite can mutate a selected target only after backup evidence and exact dry-run fingerprint confirmation.
+
+`agent-brain setup` can run with no arguments. It discovers `~/.claude`, `~/.codex`, and `~/.agents` read-only, follows symlinks for evidence, summarizes portable candidates and exclusions, and stops before writing.
+
+Start with a non-mutating setup preview:
+
+```bash
+agent-brain setup
+```
+
+That command should print visible roots, backing paths when symlinks are involved, portable candidates, default exclusions such as auth/cache/runtime material, and unknown review items. Findings are not automatic changes; they are labels that explain ownership, portability, caches, secrets, unknown files, or roots that need review.
+
+To write the canonical Agent Brain repo after reviewing the summary, confirm the import. By default, setup uses `~/.agent-brain`; pass `--repo <path>` to choose another destination.
+
+```bash
+agent-brain setup --confirm-import
+```
+
+`agent-brain setup --confirm-import` writes the canonical Agent Brain repo after you review the summary. It does not rewrite `~/.claude`, `~/.codex`, or `~/.agents` unless you also select a target root and confirm the exact dry-run fingerprint.
+
+For the first full workflow, use disposable roots. This creates a tiny Claude Code-like source root, previews guided setup against a disposable HOME, imports it into an Agent Brain repo, dry-runs materialization into a separate target, confirms that exact dry-run, verifies the result, rolls it back, and bootstraps another target from the canonical repo:
+
+```bash
+AB_DEMO="$(pwd)/tmp/agent-brain-demo"
+rm -rf "$AB_DEMO"
+mkdir -p "$AB_DEMO/home/.claude/skills/review" "$AB_DEMO/home/.codex" "$AB_DEMO/live-target"
+printf '# Review\n\nPortable disposable skill.\n' > "$AB_DEMO/home/.claude/skills/review/SKILL.md"
+
+# Preview guided setup. This is read-only.
+HOME="$AB_DEMO/home" agent-brain setup --repo "$AB_DEMO/agent-brain-live" --json
+
+# Confirm only the canonical import after reviewing the summary.
+HOME="$AB_DEMO/home" agent-brain setup --repo "$AB_DEMO/agent-brain-live" --confirm-import --json
+
+# Dry-run setup's optional local rewrite. This creates backup evidence and does not mutate yet.
+DRY_RUN_JSON=$(HOME="$AB_DEMO/home" agent-brain setup --repo "$AB_DEMO/agent-brain-live" --confirm-import --target-root "$AB_DEMO/live-target" --adapter claude-code --profile profile.default --json)
 printf '%s\n' "$DRY_RUN_JSON"
 FINGERPRINT=$(printf '%s' "$DRY_RUN_JSON" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).findings.find(f=>f.id==="apply.dry-run").provenance.fingerprint))')
 
-APPLY_JSON=$(agent-brain apply --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --profile profile.default --confirm-fingerprint "$FINGERPRINT" --json)
+# Confirm only the exact dry-run fingerprint you just reviewed. Setup verifies after mutation.
+APPLY_JSON=$(HOME="$AB_DEMO/home" agent-brain setup --repo "$AB_DEMO/agent-brain-live" --confirm-import --target-root "$AB_DEMO/live-target" --adapter claude-code --profile profile.default --confirm-fingerprint "$FINGERPRINT" --json)
 printf '%s\n' "$APPLY_JSON"
 SNAPSHOT=$(printf '%s' "$APPLY_JSON" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).findings.find(f=>f.id==="apply.snapshot-created").provenance.snapshotPath))')
 
-agent-brain verify --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --json
-agent-brain rollback --snapshot "$SNAPSHOT" --target-root tmp/live-target --json
-agent-brain bootstrap --repo tmp/agent-brain-live --target-root tmp/live-target-b --adapter claude-code --profile profile.default --json
+# Verify, rollback, and prove a second target can be bootstrapped from canonical intent.
+agent-brain verify --repo "$AB_DEMO/agent-brain-live" --target-root "$AB_DEMO/live-target" --adapter claude-code --json
+agent-brain rollback --snapshot "$SNAPSHOT" --target-root "$AB_DEMO/live-target" --json
+agent-brain bootstrap --repo "$AB_DEMO/agent-brain-live" --target-root "$AB_DEMO/live-target-b" --adapter claude-code --profile profile.default --json
 ```
 
-Use disposable roots first. The same safety gates apply to real app roots: explicit roots, dry-run fingerprint, baseline snapshot, materialization lock, verify, rollback, and bootstrap from canonical intent rather than copying full app homes.
+When you are ready to inspect real local state, keep the first pass non-mutating:
+
+```bash
+agent-brain setup
+```
+
+Only import or rewrite real roots after reviewing the setup summary. Use `--repo` to choose where the canonical Agent Brain repo output should be written:
+
+```bash
+agent-brain setup --repo ~/agent-brain-live --confirm-import --json
+```
+
+### Expert commands
+
+Use expert commands when automation or a manual recovery path needs exact inputs:
+
+| Command | What it expects |
+| --- | --- |
+| `agent-brain doctor` | Can run with no arguments. It does a read-only diagnosis of standard local Claude Code, Codex, and agents roots it can discover. |
+| `agent-brain doctor --claude-root <path>` | Diagnoses an explicit root instead of relying on default discovery. Add `--codex-root` or repeated `--source-root` values when those are part of the setup you want to inspect. |
+| `agent-brain plan` | Previews what would be adopted from an input source. It needs `--claude-root`, `--codex-root`, `--source-root`, or `--fixture`. It does not write an Agent Brain repo. |
+| `agent-brain import` | Converts portable candidates from an input source into canonical Agent Brain repo files. It needs an input source plus `--repo <path>` because that is where it writes the repo output. |
+| `agent-brain apply` | Reads an Agent Brain repo and target root, then prints a dry-run fingerprint first. It mutates only when you rerun it with the exact `--confirm-fingerprint` value. |
+| `agent-brain verify` | Checks a target root against an Agent Brain repo and adapter. |
+| `agent-brain rollback` | Restores a target root from snapshot metadata created by a confirmed apply. |
+| `agent-brain bootstrap` | Builds another target root from the canonical Agent Brain repo. |
+
+For real tracked `.codex`, `.claude`, and `.dotstate` folders, use the [personal live npm E2E protocol](https://github.com/leonardsellem/agent-brain/blob/dev/docs/live-personal-npm-e2e-protocol.md) before any mutation. It keeps the npm-installed, Computer Use-visible pass non-mutating until a fresh Ring 2 approval names the exact dry-run fingerprint and recovery evidence.
+
+Live mutation is intentionally slower than diagnosis. The same safety gates apply to real app roots and disposable roots: explicit roots, dry-run fingerprint, baseline snapshot, materialization lock, verify, rollback, and bootstrap from canonical intent rather than copying full app homes.
 
 ### Contributor Setup
 

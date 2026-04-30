@@ -55,7 +55,30 @@ describe("import and plan commands", () => {
     expect(JSON.parse(imported.stdout)).toMatchObject({
       ok: false,
       error: {
-        code: "repo_required"
+        code: "repo_required",
+        message: expect.stringContaining("agent-brain setup")
+      }
+    });
+  });
+
+  it("guides missing-source expert commands toward setup while preserving error codes", async () => {
+    const cli = createCli();
+
+    const plan = await cli.run(["plan", "--json"]);
+    const imported = await cli.run(["import", "--json"]);
+
+    expect(JSON.parse(plan.stdout)).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_arguments",
+        message: expect.stringContaining("agent-brain setup")
+      }
+    });
+    expect(JSON.parse(imported.stdout)).toMatchObject({
+      ok: false,
+      error: {
+        code: "invalid_arguments",
+        message: expect.stringContaining("agent-brain setup")
       }
     });
   });

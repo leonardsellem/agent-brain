@@ -56,4 +56,45 @@ describe("materialization lock store", () => {
       errors: ["materialization lock contains codex entries for claude-code apply"]
     });
   });
+
+  it("replaces entries for the applied adapter while preserving other adapters", () => {
+    const repoRoot = mkdtempSync(path.join(os.tmpdir(), "agent-brain-lock-"));
+    writeMaterializationLock(repoRoot, {
+      schemaVersion: 1,
+      entries: [
+        {
+          adapter: "claude-code",
+          packageId: "pkg.claude",
+          targetPath: "/target/claude/skills/claude/SKILL.md",
+          contentHash: "sha256:claude",
+          generated: true
+        },
+        {
+          adapter: "codex",
+          packageId: "pkg.old",
+          targetPath: "/target/agents/skills/old/SKILL.md",
+          contentHash: "sha256:old",
+          generated: true
+        }
+      ]
+    });
+
+    writeMaterializationLock(repoRoot, {
+      schemaVersion: 1,
+      entries: [
+        {
+          adapter: "codex",
+          packageId: "pkg.new",
+          targetPath: "/target/agents/skills/new/SKILL.md",
+          contentHash: "sha256:new",
+          generated: true
+        }
+      ]
+    });
+
+    const loaded = readMaterializationLock(repoRoot);
+
+    expect(loaded.ok).toBe(true);
+    expect(loaded.lock!.entries.map((entry) => entry.packageId)).toEqual(["pkg.claude", "pkg.new"]);
+  });
 });

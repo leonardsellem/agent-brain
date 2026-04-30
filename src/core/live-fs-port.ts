@@ -5,7 +5,8 @@ import {
   readSync,
   readdirSync,
   readlinkSync,
-  realpathSync
+  realpathSync,
+  statSync
 } from "node:fs";
 import path from "node:path";
 import type { ScannableEntry, ScannableFsPort } from "./fs-port.js";
@@ -47,11 +48,21 @@ export function scanLiveRoot(options: ScanLiveRootOptions): ScannableFsPort {
   const state = {
     truncated: false,
     maxEntries: options.maxEntries ?? defaultMaxEntries,
-    excludedDirectoryNames: new Set(options.excludedDirectoryNames ?? defaultExcludedDirectoryNames)
+    excludedDirectoryNames: new Set(options.excludedDirectoryNames ?? defaultExcludedDirectoryNames),
+    activeRealDirectories: new Set<string>()
   };
 
   try {
     const rootStat = lstatSync(root);
+    if (rootStat.isSymbolicLink()) {
+      const rootEntry = scanPath(root, options);
+      entries.push(rootEntry);
+      if (rootEntry.kind === "symlink" && !rootEntry.broken && isDirectoryFollowingSymlink(root)) {
+        scanDirectoryChildren(root, options, entries, state);
+      }
+      return { root, entries };
+    }
+
     if (!rootStat.isDirectory()) {
       entries.push(scanPath(root, options));
       return { root, entries };
@@ -79,10 +90,22 @@ function scanDirectoryChildren(
     truncated: boolean;
     maxEntries: number;
     excludedDirectoryNames: Set<string>;
+    activeRealDirectories: Set<string>;
   }
 ) {
   if (state.truncated) {
     return;
+  }
+
+  let realDirectory: string | undefined;
+  try {
+    realDirectory = realpathSync(directory);
+    if (state.activeRealDirectories.has(realDirectory)) {
+      return;
+    }
+    state.activeRealDirectories.add(realDirectory);
+  } catch {
+    // The child-level scan below will surface the unreadable path.
   }
 
   let children: string[];
@@ -114,7 +137,16 @@ function scanDirectoryChildren(
         continue;
       }
       scanDirectoryChildren(childPath, options, entries, state);
+      continue;
     }
+
+    if (entry.kind === "symlink" && !entry.broken && isDirectoryFollowingSymlink(childPath)) {
+      scanDirectoryChildren(childPath, options, entries, state);
+    }
+  }
+
+  if (realDirectory) {
+    state.activeRealDirectories.delete(realDirectory);
   }
 }
 
@@ -142,12 +174,16 @@ function scanPath(entryPath: string, options: ScanLiveRootOptions): ScannableEnt
     if (stat.isSymbolicLink()) {
       const linkTarget = readlinkSync(entryPath);
       try {
+        const targetStat = statSync(entryPath);
         return omitUndefined({
           path: entryPath,
           kind: "symlink" as const,
           ...ownership,
           linkTarget,
-          realPath: realpathSync(entryPath)
+          realPath: realpathSync(entryPath),
+          contentSample: targetStat.isFile()
+            ? readContentSample(entryPath, options.contentSampleBytes, targetStat.size)
+            : undefined
         });
       } catch {
         return omitUndefined({
@@ -182,6 +218,14 @@ function scanPath(entryPath: string, options: ScanLiveRootOptions): ScannableEnt
     return unreadableEntry(entryPath, options, new Error("Unsupported filesystem entry"));
   } catch (error) {
     return unreadableEntry(entryPath, options, error);
+  }
+}
+
+function isDirectoryFollowingSymlink(entryPath: string): boolean {
+  try {
+    return statSync(entryPath).isDirectory();
+  } catch {
+    return false;
   }
 }
 

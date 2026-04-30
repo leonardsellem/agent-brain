@@ -4,7 +4,11 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { renderJsonReport } from "./reporting/json.js";
 import { renderTextReport } from "./reporting/text.js";
 import { loadScannableFixture, ScannableFixtureError } from "./core/scannable-fixture.js";
-import { createDefaultDiagnosisScannableFsPort, createLiveScannableFsPort } from "./import/live-scanner.js";
+import {
+  createDefaultDiagnosisScannableFsPort,
+  createDefaultSetupScannableFsPort,
+  createLiveScannableFsPort
+} from "./import/live-scanner.js";
 import type { CommandContext, CommandHandler, FsPort, Report } from "./types.js";
 import { createApplyCommand } from "./commands/apply.js";
 import { createBootstrapCommand } from "./commands/bootstrap.js";
@@ -12,6 +16,7 @@ import { createDoctorCommand } from "./commands/doctor.js";
 import { createExplainConflictCommand } from "./commands/explain-conflict.js";
 import { createImportCommand, createPlanCommand } from "./commands/import.js";
 import { createRollbackCommand } from "./commands/rollback.js";
+import { createSetupCommand } from "./commands/setup.js";
 import { createVerifyCommand } from "./commands/verify.js";
 
 export interface CliResult {
@@ -26,6 +31,7 @@ export interface CliOptions {
 }
 
 type CommandName =
+  | "setup"
   | "doctor"
   | "import"
   | "plan"
@@ -36,6 +42,7 @@ type CommandName =
   | "explain-conflict";
 
 const commandPurposes: Record<CommandName, string> = {
+  setup: "Run guided setup to discover sources, preview import, and choose safe next steps.",
   doctor: "Diagnose local agent app roots and ownership risks.",
   import: "Import portable source into an Agent Brain repo plan.",
   plan: "Show proposed adoption or apply changes before writing.",
@@ -49,6 +56,19 @@ const commandPurposes: Record<CommandName, string> = {
 const commandNames = Object.keys(commandPurposes) as CommandName[];
 
 const commandHelpOptions: Record<CommandName, string[]> = {
+  setup: [
+    "--fixture <path>             Read a synthetic scannable fixture.",
+    "--claude-root <path>         Include an explicit Claude Code root in guided setup.",
+    "--codex-root <path>          Include an explicit Codex root in guided setup.",
+    "--source-root <path>         Include an additional import source root; repeatable.",
+    "--repo <path>                Use this Agent Brain repo destination instead of the default.",
+    "--confirm-import            Confirm the reviewed setup summary and write the canonical repo.",
+    "--target-root <path>         Optional live target root to dry-run after confirmed import.",
+    "--adapter <claude-code|codex> Adapter used for optional live target planning.",
+    "--profile <id>               Profile to materialize; defaults to profile.default.",
+    "--confirm-fingerprint <sha>  Confirm the exact reviewed dry-run fingerprint before mutation.",
+    "--json                      Render structured JSON output without interactive prompts."
+  ],
   doctor: [
     "(no roots)                  Run a default read-only diagnosis of standard local app roots.",
     "--fixture <path>             Read a synthetic scannable fixture.",
@@ -167,7 +187,7 @@ export function createCli(options: CliOptions = {}) {
       const fixturePath = optionValue(args, "--fixture");
       const commandFs = fixturePath
         ? loadFixtureForCli(fixturePath)
-        : loadLiveRootsForCli(args) ?? loadDefaultDiagnosisForCli(rawCommand, providedFs) ?? { fs };
+        : loadLiveRootsForCli(args) ?? loadDefaultRootsForCli(rawCommand, providedFs, args) ?? { fs };
       if ("error" in commandFs) {
         const report: Report = {
           ok: false,
@@ -197,6 +217,7 @@ export function createCli(options: CliOptions = {}) {
 
 function defaultCommands(): Record<CommandName, CommandHandler> {
   return {
+    setup: createSetupCommand(),
     doctor: createDoctorCommand(),
     import: createImportCommand(),
     plan: createPlanCommand(),
@@ -319,14 +340,30 @@ function loadLiveRootsForCli(args: string[]): { fs: FsPort } | undefined {
   };
 }
 
-function loadDefaultDiagnosisForCli(command: CommandName, providedFs: FsPort | undefined): { fs: FsPort } | undefined {
-  if (command !== "doctor" || providedFs) {
+function loadDefaultRootsForCli(
+  command: CommandName,
+  providedFs: FsPort | undefined,
+  args: string[]
+): { fs: FsPort } | undefined {
+  if (providedFs) {
     return undefined;
   }
 
-  return {
-    fs: createDefaultDiagnosisScannableFsPort()
-  };
+  if (command === "doctor") {
+    return {
+      fs: createDefaultDiagnosisScannableFsPort()
+    };
+  }
+
+  if (command === "setup") {
+    return {
+      fs: createDefaultSetupScannableFsPort({
+        fullContent: args.includes("--confirm-import")
+      })
+    };
+  }
+
+  return undefined;
 }
 
 function packageIdentity(): string {
