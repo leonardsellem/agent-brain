@@ -176,6 +176,12 @@ node dist/cli.js explain-conflict '~/.claude/skills/review/SKILL.md' --json
 
 `apply` reports a dry-run fingerprint unless you pass the exact `--confirm-fingerprint` value from that dry-run. `rollback` fails until snapshot metadata is supplied; that is intentional and prevents a missing rollback record from looking successful.
 
+## Contributing
+
+Agent Brain is open to contributors who want agent workspaces to become more legible, portable, and safe. The most helpful contributions improve ownership classification, adapter behavior, CLI safety gates, synthetic fixtures, documentation, release evidence, or the contributor experience around guarded live use.
+
+Start with the [Contributing guide](CONTRIBUTING.md). It covers project boundaries, good first contributions, local setup, TDD expectations, safety rules, pull request checks, and release/security boundaries.
+
 ## Development
 
 This repository is optimized for agent-native development:
@@ -191,6 +197,7 @@ Useful docs:
 - [Architecture](docs/architecture.md)
 - [Adapter contract](docs/adapter-contract.md)
 - [Safety model](docs/safety-model.md)
+- [Contributing guide](CONTRIBUTING.md)
 - [Agent handoff](docs/agent-handoff.md)
 - [Agent instructions](AGENTS.md)
 
