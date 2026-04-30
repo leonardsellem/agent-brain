@@ -132,6 +132,63 @@ describe("setup CLI", () => {
     expect(readFileSync(agentsSkill, "utf8")).toBe(beforeAgentsSkill);
     expect(existsSync(path.join(home, ".agent-brain"))).toBe(false);
   });
+
+  it("does not write the canonical repo before import confirmation", () => {
+    const home = mkdtempSync(path.join(os.tmpdir(), "agent-brain-setup-home-"));
+    const repo = path.join(home, ".agent-brain");
+    const skillPath = path.join(home, ".claude/skills/review/SKILL.md");
+    mkdirSync(path.dirname(skillPath), { recursive: true });
+    writeFileSync(skillPath, "# Review\n");
+
+    const setup = runCli(["setup", "--repo", repo, "--json"], { HOME: home });
+
+    expect(setup.status).toBe(0);
+    expect(JSON.parse(setup.stdout).findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "setup.import-confirmation-required",
+          path: repo
+        })
+      ])
+    );
+    expect(existsSync(path.join(repo, "agent-brain.json"))).toBe(false);
+    expect(readFileSync(skillPath, "utf8")).toBe("# Review\n");
+  });
+
+  it("writes confirmed import to the default repo without mutating live roots", () => {
+    const home = mkdtempSync(path.join(os.tmpdir(), "agent-brain-setup-home-"));
+    const skillPath = path.join(home, ".claude/skills/review/SKILL.md");
+    const authPath = path.join(home, ".codex/auth.json");
+    mkdirSync(path.dirname(skillPath), { recursive: true });
+    mkdirSync(path.dirname(authPath), { recursive: true });
+    writeFileSync(skillPath, "# Review\n");
+    writeFileSync(authPath, "token = \"sk-test-secret-value\"\n");
+
+    const setup = runCli(["setup", "--confirm-import", "--json"], { HOME: home });
+    const repo = path.join(home, ".agent-brain");
+
+    expect(setup.status).toBe(0);
+    expect(JSON.parse(setup.stdout).findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "setup.import-written",
+          path: path.join(repo, "agent-brain.json")
+        }),
+        expect.objectContaining({
+          id: "setup.import-written",
+          path: path.join(repo, "profiles/default.json")
+        }),
+        expect.objectContaining({
+          id: "setup.import-written",
+          path: path.join(repo, "packages/review/SKILL.md")
+        })
+      ])
+    );
+    expect(readFileSync(path.join(repo, "packages/review/SKILL.md"), "utf8")).toBe("# Review\n");
+    expect(existsSync(path.join(repo, "packages/auth/package.json"))).toBe(false);
+    expect(readFileSync(skillPath, "utf8")).toBe("# Review\n");
+    expect(readFileSync(authPath, "utf8")).toBe("token = \"sk-test-secret-value\"\n");
+  });
 });
 
 function runCli(args: string[], env: NodeJS.ProcessEnv = {}) {

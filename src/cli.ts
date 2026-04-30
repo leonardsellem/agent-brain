@@ -62,6 +62,7 @@ const commandHelpOptions: Record<CommandName, string[]> = {
     "--codex-root <path>          Include an explicit Codex root in guided setup.",
     "--source-root <path>         Include an additional import source root; repeatable.",
     "--repo <path>                Use this Agent Brain repo destination instead of the default.",
+    "--confirm-import            Confirm the reviewed setup summary and write the canonical repo.",
     "--json                      Render structured JSON output without interactive prompts."
   ],
   doctor: [

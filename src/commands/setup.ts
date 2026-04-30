@@ -1,16 +1,24 @@
+import os from "node:os";
+import path from "node:path";
+import { toDisplayPath } from "../core/display-path.js";
 import { isScannableFsPort } from "../core/fs-port.js";
 import { createSetupClassificationSummary } from "../setup/classification-summary.js";
 import { createSetupDiscovery } from "../setup/discovery.js";
+import { createSetupImportPlan, writeSetupImport } from "../setup/flow.js";
 import type { CommandHandler, Finding } from "../types.js";
 
 const setupReportSampleLimit = 50;
 
 export function createSetupCommand(): CommandHandler {
-  return (context) => {
+  return (context, args) => {
     const discovery = isScannableFsPort(context.fs) ? createSetupDiscovery(context.fs) : undefined;
     const classificationSummary = isScannableFsPort(context.fs)
       ? createSetupClassificationSummary(context.fs.entries)
       : undefined;
+    const explicitRepoDestination = optionValue(args, "--repo");
+    const repoDestination = explicitRepoDestination ?? path.join(os.homedir(), ".agent-brain");
+    const previewRepoDestination = explicitRepoDestination ?? toDisplayPath(repoDestination);
+    const importConfirmed = args.includes("--confirm-import");
     const findings: Finding[] = [
       {
         id: "setup.confirmation-required",
@@ -55,10 +63,51 @@ export function createSetupCommand(): CommandHandler {
       });
     }
 
+    if (isScannableFsPort(context.fs)) {
+      const importPlan = createSetupImportPlan(context.fs.entries);
+      if (importConfirmed && importPlan.conflicts.length > 0) {
+        return {
+          ok: false,
+          error: {
+            code: "import_conflicts",
+            message: "Setup import has unresolved package conflicts"
+          },
+          findings: importPlan.conflicts.map((conflict) => ({
+            id: conflict.id,
+            severity: "high",
+            category: "conflict",
+            path: conflict.paths.join(", "),
+            message: `${conflict.packageId} has multiple source paths`,
+            recommendation: "Rename or manually classify one source before confirming setup import"
+          }))
+        };
+      }
+
+      if (importConfirmed) {
+        const imported = writeSetupImport(importPlan, repoDestination);
+        findings.push(...imported.writtenPaths.map((writtenPath) => ({
+          id: "setup.import-written",
+          severity: "info" as const,
+          category: "portable-source",
+          path: writtenPath,
+          message: `Wrote ${writtenPath}`
+        })));
+      } else {
+        findings.push({
+          id: "setup.import-confirmation-required",
+          severity: "info",
+          category: "setup",
+          path: previewRepoDestination,
+          message: "Setup has not written the canonical Agent Brain repo.",
+          recommendation: "Re-run setup with --confirm-import after reviewing the discovery summary"
+        });
+      }
+    }
+
     return {
       ok: true,
       summary: discovery
-        ? `Setup found ${discovery.visibleRoots.length} visible roots, ${discovery.sources.length} sources, and ${discovery.symlinks.length} symlinks. Confirmation required before writing.`
+        ? `Setup found ${discovery.visibleRoots.length} visible roots, ${discovery.sources.length} sources, and ${discovery.symlinks.length} symlinks. ${importConfirmed ? "Import complete." : "Confirmation required before writing."}`
         : "Setup is ready to discover sources and needs confirmation before writing.",
       findings
     };
@@ -67,4 +116,9 @@ export function createSetupCommand(): CommandHandler {
 
 function sample<T>(values: T[]): T[] {
   return values.slice(0, setupReportSampleLimit);
+}
+
+function optionValue(args: string[], option: string): string | undefined {
+  const optionIndex = args.indexOf(option);
+  return optionIndex === -1 ? undefined : args[optionIndex + 1];
 }
