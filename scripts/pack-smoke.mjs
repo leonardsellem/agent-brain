@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -58,6 +58,22 @@ try {
       forbiddenPrefixes.every((prefix) => !file.startsWith(prefix)),
       `Packed package includes local-only path ${file}`
     );
+  }
+
+  const packedFileSet = new Set(files);
+  const readme = readFileSync(path.join(repoRoot, "README.md"), "utf8");
+  const readmeTargets = [
+    ...readme.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g),
+    ...readme.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)
+  ].map((match) => match[1]);
+
+  for (const target of readmeTargets) {
+    if (/^(https?:|mailto:|#)/.test(target)) {
+      continue;
+    }
+
+    const packedPath = target.split("#")[0];
+    assert(packedFileSet.has(packedPath), `README links to ${target}, but ${packedPath} is not packed`);
   }
 
   const tarball = path.join(tempRoot, packResult.filename);

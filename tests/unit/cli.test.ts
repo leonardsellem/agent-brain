@@ -28,7 +28,9 @@ describe("agent-brain CLI", () => {
 
     const doctor = await cli.run(["doctor", "--help"]);
     const apply = await cli.run(["apply", "--help"]);
+    const bootstrap = await cli.run(["bootstrap", "--help"]);
 
+    expect(doctor.stdout).toContain("default read-only diagnosis");
     expect(doctor.stdout).toContain("--claude-root");
     expect(doctor.stdout).toContain("--codex-root");
     expect(doctor.stdout).toContain("--source-root");
@@ -36,6 +38,16 @@ describe("agent-brain CLI", () => {
     expect(apply.stdout).toContain("--target-root");
     expect(apply.stdout).toContain("--confirm-fingerprint");
     expect(apply.stdout).toContain("--adapter");
+    expect(bootstrap.stdout).toContain("--confirm-fingerprint");
+  });
+
+  it("returns package identity for version requests", async () => {
+    const cli = createCli();
+
+    const result = await cli.run(["--version"]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stdout).toMatch(/^@leonardsellem\/agent-brain \d+\.\d+\.\d+/);
   });
 
   it("returns a readable suggestion list for unknown commands", async () => {

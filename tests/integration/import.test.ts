@@ -124,6 +124,28 @@ describe("import and plan commands", () => {
       ])
     );
   });
+
+  it("imports portable source content from explicit disposable Claude roots", async () => {
+    const claudeRoot = mkdtempSync(path.join(os.tmpdir(), "agent-brain-live-claude-"));
+    const repo = mkdtempSync(path.join(os.tmpdir(), "agent-brain-repo-"));
+    const skillPath = path.join(claudeRoot, "skills/review/SKILL.md");
+    mkdirSync(path.dirname(skillPath), { recursive: true });
+    writeFileSync(skillPath, "# Disposable Review\n");
+    const cli = createCli();
+
+    const imported = await cli.run(["import", "--claude-root", claudeRoot, "--repo", repo, "--json"]);
+
+    expect(imported.exitCode).toBe(0);
+    expect(readFileSync(path.join(repo, "packages/review/SKILL.md"), "utf8")).toBe("# Disposable Review\n");
+    expect(JSON.parse(imported.stdout).findings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "brain-file-written",
+          path: path.join(repo, "packages/review/SKILL.md")
+        })
+      ])
+    );
+  });
 });
 
 function fixtureFs(entries: ScannableFsPort["entries"]): ScannableFsPort {

@@ -14,7 +14,8 @@ export interface ClassifiedEntry {
   findings: Finding[];
 }
 
-const secretPattern = /(api[_-]?key|secret|token|password)\s*[:=]\s*['"]?(sk-|gho_|xox|[A-Za-z0-9_-]{12,})/i;
+const secretPattern =
+  /["']?(api[_-]?key|secret|token|password)["']?\s*[:=]\s*["']?(sk-|gho_|xox|[A-Za-z0-9_-]{12,})/i;
 
 export function classifyEntry(entry: ScannableEntry): ClassifiedEntry {
   if (entry.kind === "unreadable") {
@@ -80,11 +81,12 @@ export function classifyEntry(entry: ScannableEntry): ClassifiedEntry {
     };
   }
 
+  const classificationPath = entry.logicalPath ?? entry.path;
   const adapterResult =
     entry.adapter === "claude-code"
-      ? claudeCodeAdapter.classifyPath(entry.path)
+      ? claudeCodeAdapter.classifyPath(classificationPath)
       : entry.adapter === "codex"
-        ? codexAdapter.classifyPath(entry.path)
+        ? codexAdapter.classifyPath(classificationPath)
         : {
             classification: "unknown" as const,
             role: "unknown",

@@ -63,7 +63,12 @@ describe("README", () => {
     expect(readme).toContain("node dist/cli.js doctor --fixture tests/fixtures/e2e-persona/scannable.json");
     expect(readme).toContain("node dist/cli.js import --fixture tests/fixtures/e2e-persona/scannable.json --repo tmp/agent-brain-preview");
     expect(readme).toContain("node dist/cli.js apply --fixture tests/fixtures/e2e-persona/scannable.json --target-root /synthetic/target --json");
+    expect(readme).toContain("agent-brain import --claude-root tmp/live-claude --repo tmp/agent-brain-live --json");
+    expect(readme).toContain("FINGERPRINT=");
+    expect(readme).toContain("SNAPSHOT=");
     expect(readme).toContain("agent-brain bootstrap --repo tmp/agent-brain-live --target-root tmp/live-target-b --adapter claude-code --profile profile.default --json");
+    expect(readme).not.toContain("sha256:from-dry-run");
+    expect(readme).not.toContain("tmp/live-source");
     expect(readme).toContain("node dist/cli.js explain-conflict '~/.codex/history.jsonl'");
     expect(readme).not.toContain("node dist/cli.js explain-conflict ~/.codex/history.jsonl");
   });
@@ -87,7 +92,7 @@ describe("README", () => {
   it("points cautious users to the personal live protocol after the disposable-root guidance", () => {
     const readme = readFileSync(readmePath, "utf8");
     const disposableGuidanceIndex = readme.indexOf("Run against a disposable or explicitly approved setup first");
-    const protocolLinkIndex = readme.indexOf("[personal live npm E2E protocol](docs/live-personal-npm-e2e-protocol.md)");
+    const protocolLinkIndex = readme.indexOf("[personal live npm E2E protocol](https://github.com/leonardsellem/agent-brain/blob/dev/docs/live-personal-npm-e2e-protocol.md)");
 
     expect(disposableGuidanceIndex).toBeGreaterThan(-1);
     expect(protocolLinkIndex).toBeGreaterThan(-1);
@@ -100,7 +105,7 @@ describe("README", () => {
     const contributingIndex = readme.indexOf("## Contributing");
     const developmentIndex = readme.indexOf("## Development");
 
-    expect(readme).toContain("[Contributing guide](CONTRIBUTING.md)");
+    expect(readme).toContain("[Contributing guide](https://github.com/leonardsellem/agent-brain/blob/dev/CONTRIBUTING.md)");
     expect(contributingIndex).toBeGreaterThan(-1);
     expect(developmentIndex).toBeGreaterThan(-1);
     expect(contributingIndex).toBeLessThan(developmentIndex);

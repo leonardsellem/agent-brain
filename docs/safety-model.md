@@ -58,14 +58,14 @@ Explicit override should be rare, provenance-bearing, and visible in reports.
 
 Before using a live app root:
 
-1. Run `agent-brain doctor --fixture tests/fixtures/e2e-persona/scannable.json` and inspect high-severity findings.
-2. Run `agent-brain plan --fixture tests/fixtures/e2e-persona/scannable.json` before writing.
-3. Write only to an explicit repo destination with `agent-brain import --fixture tests/fixtures/e2e-persona/scannable.json --repo tmp/agent-brain-preview`.
-4. Review exclusions, unknowns, shared-root risks, and secret findings.
-5. Confirm that the dry-run only touches paths Agent Brain should own.
-6. Confirm the exact dry-run fingerprint with `--confirm-fingerprint` only after reviewing the dry-run output.
-7. Keep the snapshot location and rollback command visible before apply.
-8. Run `agent-brain verify --fixture tests/fixtures/e2e-persona/scannable.json --target-root /synthetic/target` after apply.
+1. Run `agent-brain doctor` for a read-only default diagnosis, then rerun with explicit roots such as `--claude-root`, `--codex-root`, or `--source-root` for the roots you intend to inspect.
+2. Run `agent-brain import --claude-root <root> --repo <repo>` or `agent-brain import --source-root <root> --repo <repo>` only into an explicit Agent Brain repo destination.
+3. Review exclusions, unknowns, shared-root risks, and secret findings before treating any package as portable.
+4. Run `agent-brain apply --repo <repo> --target-root <target> --adapter <adapter> --json` and confirm that the dry-run only touches paths Agent Brain should own.
+5. Confirm the exact dry-run fingerprint with `--confirm-fingerprint` only after reviewing the dry-run output.
+6. Keep the snapshot location and rollback command visible before apply.
+7. Run `agent-brain verify --repo <repo> --target-root <target> --adapter <adapter>` after apply.
+8. Rehearse with `--fixture tests/fixtures/e2e-persona/scannable.json` when you want a deterministic synthetic model check instead of a live-root check.
 
 The public `apply`, `verify`, and `rollback` commands fail closed when required evidence is missing. A missing target, fixture, fingerprint, lock context, or snapshot metadata should produce an error rather than a reassuring success summary.
 

@@ -4,6 +4,7 @@ export type FsEntryKind = "file" | "directory" | "symlink" | "unreadable";
 
 export interface ScannableEntry {
   path: string;
+  logicalPath?: string;
   kind: FsEntryKind;
   adapter?: TargetAdapterName;
   adapters?: TargetAdapterName[];

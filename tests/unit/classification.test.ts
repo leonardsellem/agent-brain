@@ -59,6 +59,42 @@ describe("ownership classification", () => {
     });
   });
 
+  it("uses logical adapter paths for classification while preserving physical paths in findings", () => {
+    const result = classifyEntry({
+      path: "/tmp/live-claude/skills/review/SKILL.md",
+      logicalPath: "~/.claude/skills/review/SKILL.md",
+      kind: "file",
+      adapter: "claude-code"
+    });
+
+    expect(result).toMatchObject({
+      path: "/tmp/live-claude/skills/review/SKILL.md",
+      classification: "portable-source",
+      role: "personal-skill"
+    });
+  });
+
+  it("detects JSON-style quoted secret keys without echoing sampled secret content", () => {
+    const result = classifyEntry({
+      path: "/tmp/live-codex/auth.json",
+      logicalPath: "~/.codex/auth.json",
+      kind: "file",
+      adapter: "codex",
+      contentSample: "{\"token\":\"sk-test-secret-value\"}"
+    });
+
+    expect(result).toMatchObject({
+      classification: "secret",
+      findings: [
+        expect.objectContaining({
+          id: "secret-like-content",
+          path: "/tmp/live-codex/auth.json",
+          message: expect.not.stringContaining("sk-test-secret-value")
+        })
+      ]
+    });
+  });
+
   it("records broken symlink targets as unknown and risky", () => {
     const result = classifyEntry({
       path: "~/.codex/skills",

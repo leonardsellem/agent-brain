@@ -16,17 +16,28 @@ For the owner's real tracked `.codex`, `.claude`, and `.dotstate` folders, use t
 
 ```bash
 npm run build
-node dist/cli.js doctor --claude-root tmp/live-claude --codex-root tmp/live-codex --source-root tmp/live-source --json
-node dist/cli.js import --source-root tmp/live-source --repo tmp/agent-brain-live --json
-node dist/cli.js apply --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --profile profile.default --json
-node dist/cli.js apply --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --profile profile.default --confirm-fingerprint sha256:from-dry-run --json
+rm -rf tmp/live-claude tmp/live-codex tmp/live-target tmp/live-target-b tmp/agent-brain-live
+mkdir -p tmp/live-claude/skills/review tmp/live-codex
+printf '# Review\n\nPortable disposable skill.\n' > tmp/live-claude/skills/review/SKILL.md
+
+node dist/cli.js doctor --claude-root tmp/live-claude --codex-root tmp/live-codex --json
+node dist/cli.js import --claude-root tmp/live-claude --repo tmp/agent-brain-live --json
+
+DRY_RUN_JSON=$(node dist/cli.js apply --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --profile profile.default --json)
+printf '%s\n' "$DRY_RUN_JSON"
+FINGERPRINT=$(printf '%s' "$DRY_RUN_JSON" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).findings.find(f=>f.id==="apply.dry-run").provenance.fingerprint))')
+
+APPLY_JSON=$(node dist/cli.js apply --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --profile profile.default --confirm-fingerprint "$FINGERPRINT" --json)
+printf '%s\n' "$APPLY_JSON"
+SNAPSHOT=$(printf '%s' "$APPLY_JSON" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).findings.find(f=>f.id==="apply.snapshot-created").provenance.snapshotPath))')
+
 node dist/cli.js verify --repo tmp/agent-brain-live --target-root tmp/live-target --adapter claude-code --json
-node dist/cli.js rollback --snapshot tmp/agent-brain-live/.agent-brain/snapshots/snap-from-dry-run.json --target-root tmp/live-target --json
+node dist/cli.js rollback --snapshot "$SNAPSHOT" --target-root tmp/live-target --json
 node dist/cli.js bootstrap --repo tmp/agent-brain-live --target-root tmp/live-target-b --adapter claude-code --profile profile.default --json
 node dist/cli.js explain-conflict 'packages/review/SKILL.md' --json
 ```
 
-The confirmation and snapshot names above are placeholders in documentation; the tested flow extracts the real fingerprint and snapshot path from JSON output.
+The command sequence extracts the real fingerprint and snapshot path from JSON output. Do not substitute placeholder fingerprints in a confirmed apply.
 
 ## Requirement Trace
 

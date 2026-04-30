@@ -27,7 +27,13 @@ describe("bootstrap command", () => {
       "profile.default",
       "--json"
     ]);
-    const fingerprint = JSON.parse(dryRun.stdout).findings[0].provenance.fingerprint;
+    const dryRunReport = JSON.parse(dryRun.stdout);
+    const fingerprint = dryRunReport.findings[0].provenance.fingerprint;
+
+    expect(dryRunReport.findings[0]).toMatchObject({
+      id: "bootstrap.dry-run",
+      message: expect.stringContaining("second-machine target")
+    });
 
     const applied = await cli.run([
       "bootstrap",
@@ -46,6 +52,11 @@ describe("bootstrap command", () => {
 
     expect(applied.exitCode).toBe(0);
     expect(existsSync(path.join(machineBTarget, "skills/review/SKILL.md"))).toBe(true);
-    expect(JSON.stringify(JSON.parse(applied.stdout))).not.toContain(machineA);
+    const appliedReport = JSON.parse(applied.stdout);
+    expect(appliedReport.findings[0]).toMatchObject({
+      id: "bootstrap.snapshot-created",
+      message: expect.stringContaining("second-machine target")
+    });
+    expect(JSON.stringify(appliedReport)).not.toContain(machineA);
   });
 });

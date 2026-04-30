@@ -38,7 +38,7 @@ export function createApplyCommand(): CommandHandler {
         ok: false,
         error: {
           code: "fixture_required",
-          message: "apply requires --fixture in developer preview"
+          message: "apply requires --repo for live materialization or --fixture for deterministic rehearsal"
         },
         findings: []
       };
