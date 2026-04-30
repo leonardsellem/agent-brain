@@ -2,11 +2,21 @@
 
 [![npm version](https://img.shields.io/npm/v/@leonardsellem%2Fagent-brain?label=npm)](https://www.npmjs.com/package/@leonardsellem/agent-brain)
 
-Agent Brain is a git-backed package and profile manager for portable AI coding-agent capabilities. It helps you turn messy local agent state into a canonical model of packages, profiles, provenance, exclusions, and target materialization.
+Agent Brain is a git-backed package and profile manager for AI coding-agent setups.
 
-The first target is the power-user migration problem: useful Claude Code and Codex setups often accumulate skills, plugins, prompts, app config, symlinks, dotfiles, caches, generated files, and local overrides faster than anyone can explain what owns what. Agent Brain makes that state legible before it mutates anything.
+It is for the moment when your Claude Code and Codex setup works, but you can no longer explain it. Skills, plugins, prompts, MCP config, hooks, profiles, app settings, generated files, symlinks, dotfiles, caches, auth state, and local overrides all end up living near each other. Dotfiles can move those paths around; they cannot tell you what is authored source, what the app owns, what is generated, what is local-only, or what should never be synced.
+
+Agent Brain turns that pile of agent app state into portable intent: packages, profiles, provenance, exclusions, adapter targets, and rollback-aware materialization. The core promise is simple: explain the setup first, make it portable second, mutate it only after safety gates.
 
 ## Why Agent Brain
+
+AI coding agents are becoming programmable work environments. A serious setup is no longer one config file; it is a mix of human-authored capabilities, app-native state, generated target output, runtime history, auth material, machine-local assumptions, and foreign tool ownership.
+
+That creates three recurring pains:
+
+- **You cannot see ownership.** A generic merge tool can show text conflicts, but it cannot say whether a conflicted file is source, generated output, cache, auth state, or unsafe shared-root fallout.
+- **You cannot safely move machines.** Copying full `.claude` and `.codex` folders can move secrets, caches, generated files, stale symlinks, and machine-local assumptions along with the useful parts.
+- **You cannot trust automation yet.** An agent can help manage agent tooling only if it has a semantic model and a fail-closed apply path before it touches live roots.
 
 Agent Brain is not a dotfiles mirror. Dotstate, chezmoi, stow, bare dotfiles repositories, and unmanaged home directories can all be import sources, but the durable product model is portable agent capability intent.
 
@@ -15,7 +25,7 @@ That distinction matters because coding-agent apps have their own semantics. A C
 Agent Brain is built around three ideas:
 
 - **Explain ownership first.** Every scanned artifact is classified before it can become canonical source.
-- **Keep intent portable.** Packages and profiles live in the Agent Brain repo; local apps are materialization targets.
+- **Version intent, not app folders.** Packages and profiles live in the Agent Brain repo; local apps are materialization targets.
 - **Make live changes reversible.** Apply flows are designed around dry-runs, fingerprints, snapshots, verification, and rollback.
 
 ## What It Manages
@@ -87,7 +97,7 @@ All commands support text output by default and structured output with `--json` 
 | `bootstrap` | Materialize a second-machine target from an Agent Brain repo. |
 | `explain-conflict` | Classify a conflicted path and recommend a semantic resolution. |
 
-The current implementation supports both a fixture-backed preview path and an explicit live path for disposable or user-approved roots. Live commands require explicit roots, adapter/profile selection, a dry-run fingerprint, a baseline snapshot, a materialization lock, verify, rollback, and bootstrap evidence before the target is considered healthy.
+The current implementation supports both a fixture-backed rehearsal path and an explicit live path for disposable or user-approved roots. Live commands require explicit roots, adapter/profile selection, a dry-run fingerprint, a baseline snapshot, a materialization lock, verify, rollback, and bootstrap evidence before the target is considered healthy.
 
 ## Safety Model
 
@@ -119,7 +129,14 @@ npm install -g @leonardsellem/agent-brain
 agent-brain --help
 ```
 
-Run against a disposable or explicitly approved setup first. Live commands require explicit roots, dry-run fingerprint confirmation, a baseline snapshot, a materialization lock, verify, rollback, and bootstrap evidence before a target is considered healthy.
+Run against a disposable or explicitly approved setup first. The public release is designed for guarded live use:
+
+- Fixture-backed commands are the safest way to inspect the model before pointing it at personal state.
+- Disposable-root live rehearsal proves the full apply, verify, rollback, and bootstrap transaction.
+- A bounded personal-live canary has proven npm-installed diagnosis, import, dry-run, apply, verify, and rollback on real tracked roots.
+- Full personal setup materialization is a deliberate migration: run diagnosis and dry-run first, review the exact fingerprint and snapshot evidence, then confirm the apply.
+
+Live commands require explicit roots, dry-run fingerprint confirmation, a baseline snapshot, a materialization lock, verify, rollback, and bootstrap evidence before a target is considered healthy.
 
 For real tracked `.codex`, `.claude`, and `.dotstate` folders, use the [personal live npm E2E protocol](docs/live-personal-npm-e2e-protocol.md) before any mutation. It keeps the npm-installed, Computer Use-visible pass non-mutating until a fresh Ring 2 approval names the exact dry-run fingerprint and recovery evidence.
 
@@ -185,7 +202,9 @@ Useful docs:
 
 ## Repository Status
 
-Agent Brain is pre-1.0. The default development branch is `dev`; `main` is the integration target.
+Agent Brain is pre-1.0 and publicly released on npm. The CLI is suitable for guarded live use against explicit `.codex`, `.claude`, `.dotstate`, disposable, or other user-approved roots when the documented dry-run, snapshot, verify, and rollback gates are followed.
+
+The default development branch is `dev`; `main` is the integration target.
 
 The npm package is configured for public launch as `@leonardsellem/agent-brain`; publication is handled through deliberate release automation rather than ordinary branch merges.
 
