@@ -1,5 +1,11 @@
 # @leonardsellem/agent-brain
 
+## 0.3.0
+
+### Minor Changes
+
+- Prepare @leonardsellem/agent-brain 0.3.0 release.
+
 ## 0.2.1
 
 ### Patch Changes
