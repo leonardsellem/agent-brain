@@ -56,14 +56,28 @@ export function planTargetMaterialization(
     }
 
     const targetPath = path.posix.join(input.targetRoot, materialized.path);
+    if (input.target.symlinks[targetPath] !== undefined) {
+      findings.push({
+        id: "generated-target-symlink-collision",
+        severity: "high",
+        category: "generated-target",
+        path: targetPath,
+        message: "Refusing to write generated content through an existing symlink target path",
+        recommendation: "Review the symlink target and choose a non-symlink generated path before applying"
+      });
+      continue;
+    }
+
+    const currentContent = input.target.files[targetPath];
+    if (currentContent === materialized.content) {
+      continue;
+    }
     outputs.push({
       packageId: pkg.id,
       path: materialized.path,
       content: materialized.content,
       contentHash: hashContent(materialized.content)
     });
-
-    const currentContent = input.target.files[targetPath];
     operations.push({
       type: currentContent === undefined ? "create" : "update",
       path: targetPath,

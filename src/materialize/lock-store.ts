@@ -30,12 +30,27 @@ export interface LockValidationResult {
 }
 
 export function writeMaterializationLock(repoRoot: string, lock: MaterializationLock): LockWriteResult {
+  const existing = readMaterializationLock(repoRoot);
+  const nextLock = existing.ok
+    ? mergeLocks(existing.lock, lock)
+    : lock;
   const written = writeRepoFiles(repoRoot, {
-    [lockRelativePath]: stableJson(lock)
+    [lockRelativePath]: stableJson(nextLock)
   });
 
   return {
     path: written.writtenPaths[0]!
+  };
+}
+
+function mergeLocks(existing: MaterializationLock, next: MaterializationLock): MaterializationLock {
+  const nextAdapters = new Set(next.entries.map((entry) => entry.adapter));
+  return {
+    schemaVersion: next.schemaVersion,
+    entries: [
+      ...existing.entries.filter((entry) => !nextAdapters.has(entry.adapter)),
+      ...next.entries
+    ]
   };
 }
 

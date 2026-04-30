@@ -49,6 +49,43 @@ describe("target planner", () => {
     ]);
   });
 
+  it("skips generated target writes when existing content already matches", () => {
+    const plan = planTargetMaterialization({
+      repo: repoWithPackage("skill"),
+      packageFiles: { "packages/review/SKILL.md": "# Review\n" },
+      adapter: "codex",
+      profileId: "profile.default",
+      targetRoot: "/target/codex",
+      target: { files: { "/target/codex/skills/review/SKILL.md": "# Review\n" }, symlinks: {} }
+    });
+
+    expect(plan.operations).toEqual([]);
+    expect(plan.findings).toEqual([]);
+  });
+
+  it("refuses to write through existing symlink target paths", () => {
+    const plan = planTargetMaterialization({
+      repo: repoWithPackage("skill"),
+      packageFiles: { "packages/review/SKILL.md": "# Review\n" },
+      adapter: "codex",
+      profileId: "profile.default",
+      targetRoot: "/target/codex",
+      target: {
+        files: {},
+        symlinks: { "/target/codex/skills/review/SKILL.md": "/shared/review/SKILL.md" }
+      }
+    });
+
+    expect(plan.operations).toEqual([]);
+    expect(plan.lock.entries).toEqual([]);
+    expect(plan.findings).toEqual([
+      expect.objectContaining({
+        id: "generated-target-symlink-collision",
+        path: "/target/codex/skills/review/SKILL.md"
+      })
+    ]);
+  });
+
   it("reports unsupported package kinds instead of blindly writing them", () => {
     const plan = planTargetMaterialization({
       repo: repoWithPackage("prompt"),

@@ -5,6 +5,22 @@ import { describe, expect, it } from "vitest";
 import { createCli } from "../../src/cli.js";
 
 describe("bootstrap command", () => {
+  it("guides missing-context bootstrap calls toward setup and explicit expert flags", async () => {
+    const cli = createCli();
+
+    const result = await cli.run(["bootstrap", "--json"]);
+
+    expect(result.exitCode).toBe(1);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      ok: false,
+      error: {
+        code: "bootstrap_requires_target",
+        message: expect.stringContaining("agent-brain setup")
+      }
+    });
+    expect(JSON.parse(result.stdout).error.message).toContain("--target-root");
+  });
+
   it("materializes a second-machine target from Agent Brain repo intent", async () => {
     const machineA = mkdtempSync(path.join(os.tmpdir(), "agent-brain-machine-a-"));
     const repo = mkdtempSync(path.join(os.tmpdir(), "agent-brain-repo-"));

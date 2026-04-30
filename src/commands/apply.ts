@@ -22,7 +22,8 @@ export function createApplyCommand(): CommandHandler {
         ok: false,
         error: {
           code: "apply_requires_target",
-          message: "apply requires --target-root; use --repo for live materialization or --fixture for deterministic rehearsal"
+          message:
+            "apply requires --target-root; use --repo for live materialization or --fixture for deterministic rehearsal. For guided same-machine setup, run agent-brain setup."
         },
         findings: []
       };

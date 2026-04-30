@@ -46,6 +46,27 @@ describe("adoption plans", () => {
     ]);
   });
 
+  it("deduplicates mirrored package paths when they resolve to the same source file", () => {
+    const plan = createAdoptionPlan(entries([
+      {
+        path: "~/.codex/skills/review/SKILL.md",
+        kind: "file",
+        adapter: "codex",
+        realPath: "/dotstate/skills/review/SKILL.md"
+      },
+      {
+        path: "~/.agents/skills/review/SKILL.md",
+        kind: "file",
+        adapter: "codex",
+        realPath: "/dotstate/skills/review/SKILL.md"
+      }
+    ]));
+
+    expect(plan.conflicts).toEqual([]);
+    expect(plan.packages).toHaveLength(1);
+    expect(plan.profile.targets.codex?.packageIds).toEqual(["pkg.review"]);
+  });
+
   it("infers package names from nested skill directories", () => {
     const plan = createAdoptionPlan(entries([
       {

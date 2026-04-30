@@ -64,6 +64,35 @@ describe("live filesystem port", () => {
     );
   });
 
+  it("follows symlinked directories read-only while preserving visible paths and real backing paths", () => {
+    const root = mkdtempSync(path.join(os.tmpdir(), "agent-brain-live-"));
+    const backing = path.join(root, ".dotstate/storage/Personal/.claude/skills/review");
+    mkdirSync(backing, { recursive: true });
+    writeFileSync(path.join(backing, "SKILL.md"), "# Backed Review\n");
+    symlinkSync(path.join(root, ".dotstate/storage/Personal/.claude/skills"), path.join(root, "skills"));
+
+    const scanned = scanLiveRoot({ root, adapter: "claude-code" });
+
+    expect(scanned.entries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: path.join(root, "skills"),
+          kind: "symlink",
+          adapter: "claude-code",
+          realPath: realpathSync(path.join(root, ".dotstate/storage/Personal/.claude/skills"))
+        }),
+        expect.objectContaining({
+          path: path.join(root, "skills/review/SKILL.md"),
+          kind: "file",
+          adapter: "claude-code",
+          contentSample: "# Backed Review\n",
+          realPath: realpathSync(path.join(backing, "SKILL.md"))
+        })
+      ])
+    );
+    expect(readFileSync(path.join(backing, "SKILL.md"), "utf8")).toBe("# Backed Review\n");
+  });
+
   it("does not mutate files while scanning", () => {
     const root = mkdtempSync(path.join(os.tmpdir(), "agent-brain-live-"));
     const filePath = path.join(root, "config.toml");
