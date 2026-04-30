@@ -16,6 +16,10 @@ describe("Codex adapter", () => {
       classification: "portable-source",
       role: "user-skill"
     });
+    expect(codexAdapter.classifyPath("skills/review/SKILL.md")).toMatchObject({
+      classification: "portable-source",
+      role: "legacy-user-skill"
+    });
     expect(codexAdapter.classifyPath("~/.codex/plugins/cache/example/plugin.json")).toMatchObject({
       classification: "runtime-cache",
       role: "plugin-cache"

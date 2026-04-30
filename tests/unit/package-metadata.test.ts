@@ -72,6 +72,8 @@ describe("npm package metadata", () => {
       "docs/brainstorms/",
       "docs/live-personal-npm-e2e-protocol.md",
       "docs/live-personal-npm-e2e-findings-template.md",
+      "docs/release-e2e-findings.md",
+      "docs/live-personal-npm-e2e-findings.md",
       ".brv/",
       "artifacts/",
       "tmp/"

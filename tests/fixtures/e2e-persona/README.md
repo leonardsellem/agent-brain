@@ -15,6 +15,6 @@ This fixture models a messy but synthetic Claude Code and Codex setup for releas
 - `claude-code/projects/project-a/local.json`: machine-local override example that should not become portable source.
 - `import-sources/dotstate/skills/review/SKILL.md`: synthetic dotstate-style source root for import-source reasoning.
 - `target-roots/`: disposable target-root examples for safety and rollback reasoning, not real app homes.
-- `scannable.json`: structured public CLI fixture used by `--fixture` in the developer-preview workflow.
+- `scannable.json`: structured public CLI fixture used by `--fixture` in the deterministic rehearsal workflow.
 
 The fixture intentionally favors small text files and explicit documentation over hidden filesystem tricks. Broken symlinks, unreadable paths, and shared physical roots are represented by scannable fixture metadata so the public CLI can exercise ownership classification without scanning live app homes.

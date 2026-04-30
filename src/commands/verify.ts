@@ -32,8 +32,8 @@ export function createVerifyCommand(findings: Finding[] = []): CommandHandler {
         return {
           ok: false,
           error: {
-            code: "fixture_required",
-            message: "verify requires --fixture in developer preview"
+            code: "verify_source_required",
+            message: "verify requires --repo for live verification or --fixture for deterministic rehearsal"
           },
           findings: []
         };

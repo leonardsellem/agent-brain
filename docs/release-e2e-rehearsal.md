@@ -22,7 +22,7 @@ The persona judges the product from the README and CLI output first. Source and 
 
 Raw terminal logs, screenshots, and other captures belong under `artifacts/e2e-release-rehearsal/`. That directory is gitignored and must not be linked from published docs.
 
-Durable release notes and sanitized findings belong in `docs/release-e2e-findings.md`. Synthetic fixtures live under `tests/fixtures/e2e-persona/`. README-ready images, if any are selected, live under `docs/assets/e2e/` and use repo-relative links.
+Concrete findings reports belong under `artifacts/findings/` or a more specific ignored artifact directory. Synthetic fixtures live under `tests/fixtures/e2e-persona/`. README-ready images, if any are selected, live under `docs/assets/e2e/` and use repo-relative links.
 
 No raw capture, docs asset, fixture, or published doc may include private absolute paths, local file URI schemes, tokens, auth material, account identifiers, or content copied from real app homes.
 
@@ -58,7 +58,7 @@ For the stricter npm-installed journey against real tracked personal roots, use 
 4. Compare public CLI behavior with fixture-backed behavior from tests and source.
 5. Probe ownership language for portable source, generated targets, runtime/cache, auth/secret, local-only, foreign-owned, and unknown material.
 6. Probe safety language for dry-run, fingerprint confirmation, snapshot, verify, and rollback.
-7. Use Computer Use with Ghostty for a human-visible terminal pass when helpful.
+7. Use Computer Use for a human-visible terminal pass when the desktop safety layer allows it; if terminal apps are unavailable, record the limitation and supplement with shell evidence.
 8. Triage findings by release impact and leave a verdict.
 
 ## Artifact Hygiene
