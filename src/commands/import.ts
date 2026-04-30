@@ -11,7 +11,8 @@ export function createPlanCommand(): CommandHandler {
         ok: false,
         error: {
           code: "invalid_arguments",
-          message: "plan requires --claude-root, --codex-root, --source-root, or --fixture"
+          message:
+            "plan requires --claude-root, --codex-root, --source-root, or --fixture. For guided local discovery, run agent-brain setup."
         },
         findings: []
       };
@@ -45,7 +46,8 @@ export function createImportCommand(): CommandHandler {
         ok: false,
         error: {
           code: "invalid_arguments",
-          message: "import requires --claude-root, --codex-root, --source-root, or --fixture"
+          message:
+            "import requires --claude-root, --codex-root, --source-root, or --fixture. For guided local discovery and confirmation, run agent-brain setup."
         },
         findings: []
       };
@@ -57,7 +59,8 @@ export function createImportCommand(): CommandHandler {
         ok: false,
         error: {
           code: "repo_required",
-          message: "import requires --repo <destination>; run plan first to preview without writing"
+          message:
+            "import requires --repo <destination>; run plan first to preview without writing, or run agent-brain setup to use ~/.agent-brain after confirmation"
         },
         findings: []
       };
